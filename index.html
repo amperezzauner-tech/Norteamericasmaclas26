@@ -159,6 +159,23 @@ body:before{
 @media(max-width:720px){.hero,.grid2,.grid3{grid-template-columns:1fr!important}.wrap{padding:10px}.leader-name{font-size:1.45rem}.leader-points{font-size:2.35rem}.bottom button{font-size:.56rem}.bottom button b{font-size:1.05rem}.tabs{display:none}.card{border-radius:18px!important}.rank-row{grid-template-columns:40px 1fr 72px}}
 @media(prefers-reduced-motion:no-preference){.leader:after{animation:trophyPulse 3.6s ease-in-out infinite}.pill{animation:softGlow 3.8s ease-in-out infinite}@keyframes trophyPulse{0%,100%{transform:scale(1);opacity:.16}50%{transform:scale(1.05);opacity:.25}}@keyframes softGlow{0%,100%{box-shadow:0 0 0 rgba(255,212,71,0)}50%{box-shadow:0 0 22px rgba(255,212,71,.15)}}}
 
+/* ===== V3 Dashboard + Feed ===== */
+.dashboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 10px}
+.dash-card{position:relative;min-height:104px;padding:14px;border-radius:20px;background:linear-gradient(180deg,rgba(11,45,77,.96),rgba(6,26,43,.98));border:1px solid rgba(255,212,71,.20);box-shadow:0 12px 26px rgba(0,0,0,.18);overflow:hidden}
+.dash-card:after{content:'';position:absolute;right:-24px;top:-24px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(255,212,71,.16),transparent 66%)}
+.dash-card span{display:block;color:var(--muted);font-size:.64rem;font-weight:900;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
+.dash-card b{display:block;color:var(--gold);font-size:1.1rem;line-height:1.15;letter-spacing:-.2px}
+.dash-card small{display:block;color:var(--muted);font-size:.68rem;margin-top:6px;line-height:1.25}
+.progress-track{height:9px;border-radius:999px;background:#061A2B;border:1px solid rgba(158,199,230,.16);overflow:hidden;margin-top:10px}
+.progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#00A6FF,#FFD447,#22C55E);width:0%}
+.feed-item{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(158,199,230,.14)}
+.feed-item:last-child{border-bottom:none}.feed-ico{font-size:1.35rem}.feed-title{font-weight:900;color:#fff}.feed-sub{font-size:.72rem;color:var(--muted);margin-top:3px;line-height:1.35}
+.player-card{position:relative;border-radius:22px;padding:16px;background:linear-gradient(160deg,rgba(255,212,71,.18),rgba(0,166,255,.12),rgba(11,45,77,.95));border:1px solid rgba(255,212,71,.35);box-shadow:0 14px 32px rgba(0,0,0,.22);overflow:hidden}
+.player-card:before{content:'★★★★★';position:absolute;right:14px;top:10px;color:rgba(255,212,71,.36);font-size:.9rem;letter-spacing:2px}.player-card .ovr{font-size:2.6rem;font-weight:950;color:var(--gold);line-height:1}.player-card .pc-name{font-size:1.05rem;font-weight:950;color:#fff;margin-top:3px}.player-card .pc-meta{font-size:.72rem;color:var(--muted);margin-top:6px}.share-note{font-size:.7rem;color:var(--muted);margin-top:8px}
+.badge-card .award-desc{display:none!important}
+@media(max-width:900px){.dashboard-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.dashboard-grid{grid-template-columns:1fr}.dash-card{min-height:92px}.player-card .ovr{font-size:2.2rem}}
+
 </style>
 <link rel="stylesheet" href="bracket.css">
 </head>
@@ -188,6 +205,14 @@ body:before{
   </nav>
 
   <section id="inicio" class="section act">
+    <div class="dashboard-grid" id="dashboard-grid">
+      <div class="dash-card"><span>Progreso del Mundial</span><b id="dash-progress">—</b><div class="progress-track"><div class="progress-fill" id="dash-progress-fill"></div></div><small id="dash-phase">Calculando fase...</small></div>
+      <div class="dash-card"><span>Próximo / En vivo</span><b id="dash-focus">—</b><small id="dash-focus-sub">Esperando calendario...</small></div>
+      <div class="dash-card"><span>Mayor subida hoy</span><b id="dash-mover">—</b><small id="dash-mover-sub">Según jornada reciente</small></div>
+      <div class="dash-card"><span>Centro de mando</span><b id="dash-center">—</b><small id="dash-center-sub">Líder · exactos · campeón</small></div>
+    </div>
+    <div class="card"><div class="section-title">⚡ Qué cambió hoy <span class="chip">auto</span></div><div class="body" id="activity-feed"></div></div>
+    <div style="height:10px"></div>
     <div class="grid2">
       <div class="card"><div class="section-title">🎯 Acierto más impresionante <span id="daily-tag" class="chip">auto</span></div><div class="body" id="daily-card"></div></div>
       <div class="card"><div class="section-title">🔥 Sorpresero</div><div class="body" id="surprise-card"></div></div>
@@ -201,7 +226,6 @@ body:before{
     <div class="grid2">
       <div class="card"><div class="section-title">👟 Botín de Oro <span class="chip">% votos</span></div><div class="body" id="botin-card"></div></div>
       <div class="card"><div class="section-title">🏅 Balón de Oro <span class="chip">% votos</span></div><div class="body" id="balon-card"></div></div>
-    </div>
     </div>
     <div style="height:10px"></div>
     <div class="card"><div class="section-title">🎯 Acertómetro top 5</div><div class="body" id="top-meter"></div></div>
@@ -341,7 +365,7 @@ body:before{
   <button onclick="showMobile('salon',this)"><b>🏅</b>Salón</button>
 </nav>
 
-<div class="profile" id="profile"><div class="sheet"><button class="close" onclick="closeProfile()">×</button><div class="prof-name" id="prof-name">Perfil</div><div class="prof-grid" id="prof-grid"></div><div style="height:12px"></div><div class="card"><div class="section-title">Últimos partidos evaluados</div><div class="body" id="prof-matches"></div></div></div></div>
+<div class="profile" id="profile"><div class="sheet"><button class="close" onclick="closeProfile()">×</button><div class="prof-name" id="prof-name">Perfil</div><div id="prof-card"></div><div style="height:12px"></div><div class="prof-grid" id="prof-grid"></div><div style="height:12px"></div><div class="card"><div class="section-title">Últimos partidos evaluados</div><div class="body" id="prof-matches"></div></div></div></div>
 
 <script>
 let PRED,RES,PARTICIPANTES=[],MATCHES=[],PLAYED=[],PENDING=[],RANKING=[],GROUP='A',CHAMPIONS=[],RARE_EVENTS=[],SURPRISE=null;
@@ -865,6 +889,55 @@ function renderEliminatorias(){
   renderKOResumen();
 }
 
+function currentPhaseLabel(finalCount,total){
+  if(finalCount>=103)return 'Final del Mundial';
+  if(finalCount>=101)return 'Semifinales';
+  if(finalCount>=97)return 'Cuartos de final';
+  if(finalCount>=89)return 'Octavos de final';
+  if(finalCount>=73)return 'Dieciseisavos';
+  return 'Fase de grupos';
+}
+function renderDashboard(){
+  const finalCount=MATCHES.filter(isFinal).length;
+  const total=MATCHES.length||104;
+  const live=currentLiveMatches();
+  const next=nextScheduledMatches();
+  const pctDone=Math.min(100,Math.round((finalCount/(total||1))*100));
+  const leader=RANKING[0]||{};
+  const js=typeof jornadaScores==='function'?jornadaScores():[];
+  const mover=js[0]||leader;
+  const fav=CHAMPIONS[0]||{team:'—',n:0};
+  const focus=live.length?live:next;
+  const focusText=focus.length?focus.map(m=>m.local+' vs '+m.visitante).join(' · '):'Sin partido próximo';
+  const focusSub=live.length?'🔴 En vivo ahora':(focus.length?('⏰ '+(fmtTime(focus[0])||'Horario por confirmar')):'Cuando entre calendario se mostrará aquí');
+  const set=(id,txt)=>{const el=document.getElementById(id);if(el)el.textContent=txt};
+  set('dash-progress',finalCount+' / '+total+' partidos');
+  set('dash-phase',currentPhaseLabel(finalCount,total)+' · '+pctDone+'% jugado');
+  const fill=document.getElementById('dash-progress-fill');if(fill)fill.style.width=pctDone+'%';
+  set('dash-focus',focusText);
+  set('dash-focus-sub',focusSub);
+  set('dash-mover',mover?.nombre||'—');
+  set('dash-mover-sub',mover?((mover.jPts??mover.pts??0)+' pts recientes · '+(mover.jExact??mover.exact??0)+' exactos'):'Sin datos');
+  set('dash-center',(leader?.nombre||'—')+' · '+(leader?.pts||0)+' pts');
+  set('dash-center-sub','Campeón más elegido: '+fav.team+' · exactos top: '+Math.max(0,...RANKING.map(x=>x.exact||0)));
+}
+function renderActivityFeed(){
+  const el=document.getElementById('activity-feed'); if(!el)return;
+  const items=[];
+  const live=currentLiveMatches();
+  const next=nextScheduledMatches();
+  const leader=RANKING[0]||{};
+  const js=typeof jornadaScores==='function'?jornadaScores():[];
+  const oracle=js[0];
+  const last=PLAYED[PLAYED.length-1];
+  if(last)items.push(['⚽','Último resultado',last.local+' '+last.golesLocal+'-'+last.golesVisitante+' '+last.visitante]);
+  if(live.length)items.push(['🔴','Partido en vivo',live.map(m=>m.local+' vs '+m.visitante).join(' · ')]);
+  else if(next.length)items.push(['⏰','Próximo partido',next.map(m=>m.local+' vs '+m.visitante).join(' · ')+' · '+(fmtTime(next[0])||'')]);
+  if(leader.nombre)items.push(['👑','Líder actual',leader.nombre+' con '+leader.pts+' puntos']);
+  if(oracle?.nombre)items.push(['🔥','Mejor jornada reciente',oracle.nombre+' · '+(oracle.jPts??0)+' pts · '+(oracle.jExact??0)+' exactos']);
+  if(SURPRISE?.nombre)items.push(['🧨','Sorpresero',SURPRISE.nombre+' · '+(SURPRISE.surpriseHits||0)+' marcadores sorpresa']);
+  el.innerHTML=items.slice(0,6).map(x=>'<div class="feed-item"><div class="feed-ico">'+x[0]+'</div><div><div class="feed-title">'+esc(x[1])+'</div><div class="feed-sub">'+esc(x[2])+'</div></div></div>').join('')||'<div class="empty">Aún no hay movimientos para mostrar.</div>';
+}
 function renderAll(){
   const leader=RANKING[0]||{}, exactTop=Math.max(0,...RANKING.map(x=>x.exact));
   const fav=CHAMPIONS[0]||{team:'—',n:0};
@@ -877,7 +950,7 @@ function renderAll(){
   document.getElementById('stat-exact').textContent=exactTop;
   document.getElementById('stat-champ').textContent=fav.team;
   const liveMatches=currentLiveMatches();document.getElementById('live-pill').textContent=liveMatches.length>1?'🔴 '+liveMatches.length+' EN VIVO':(liveMatches.length===1?'🔴 '+liveMatches[0].local+' vs '+liveMatches[0].visitante:'🏆 ELIMINATORIAS');document.getElementById('rbar').innerHTML='<b>Resultados:</b> '+(PLAYED.length?PLAYED.slice(-18).map(m=>esc(m.local.substring(0,3))+'-'+esc(m.visitante.substring(0,3))+' '+m.golesLocal+'-'+m.golesVisitante).join(' · '):'sin partidos finalizados');
-  renderDaily();renderQuickAwards();renderSurprise();renderCollective();renderChampionCards();renderBotinBalon();renderKOPredictions();renderGroupButtons();renderGroupPredictions();renderTopMeter();renderRanking();renderMatches();renderMatchPredictionTable();renderEliminatorias();renderBadges();renderRarest();
+  renderDashboard();renderActivityFeed();renderDaily();renderQuickAwards();renderSurprise();renderCollective();renderChampionCards();renderBotinBalon();renderKOPredictions();renderGroupButtons();renderGroupPredictions();renderTopMeter();renderRanking();renderMatches();renderMatchPredictionTable();renderEliminatorias();renderBadges();renderRarest();
 }
 function renderDaily(){
   let best=null;
@@ -1216,6 +1289,9 @@ function renderRarest(){
 function openProfile(id){
   const p=RANKING.find(x=>x.id===id);if(!p)return;
   document.getElementById('prof-name').textContent=medal(p.pos)+' '+p.nombre;
+  const ovr=Math.max(60,Math.min(99,Math.round((p.pct||0)*0.55+(p.exact||0)*1.2+(p.pos<=3?10:0))));
+  const pc=document.getElementById('prof-card');
+  if(pc){pc.innerHTML='<div class="player-card"><div class="ovr">'+ovr+'</div><div class="pc-name">'+esc(p.nombre)+'</div><div class="pc-meta">#'+p.pos+' · '+p.pts+' pts · '+p.exact+' exactos · '+p.hit+'/'+PLAYED.length+' aciertos</div><div class="share-note">📲 Lista para captura de pantalla y compartir en WhatsApp.</div></div>';}
   document.getElementById('prof-grid').innerHTML=[
     ['Posición','#'+p.pos],['Puntos',p.pts],['Puntos posiciones',p.groupPosPts||0],['Grupos cerrados',p.groupPosClosed||0],['Aciertos',p.hit+'/'+PLAYED.length],['Exactos',p.exact],['Efectividad',p.pct+'%'],['Campeón',cleanHonorTeam(p.honor?.campeon)||'—'],['Subcampeón',cleanHonorTeam(p.honor?.subcampeon)||'—'],['Sorpresas',p.surpriseHits||0]
   ].map(r=>'<div class="prof-stat"><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>').join('');
