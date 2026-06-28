@@ -176,6 +176,13 @@ body:before{
 @media(max-width:900px){.dashboard-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.dashboard-grid{grid-template-columns:1fr}.dash-card{min-height:92px}.player-card .ovr{font-size:2.2rem}}
 
+
+/* ===== V3.2 extras: gráfica, mapa, cartas, compartir ===== */
+.rank-chart{width:100%;height:260px;border-radius:18px;background:linear-gradient(180deg,rgba(6,26,43,.90),rgba(3,19,35,.96));border:1px solid rgba(158,199,230,.18);padding:10px;overflow:hidden}
+.rank-chart svg{width:100%;height:100%;display:block}.chart-label{font-size:10px;fill:#9EC7E6;font-weight:800}.chart-name{font-size:11px;fill:#F8FAFC;font-weight:900}.chart-grid{stroke:rgba(158,199,230,.18);stroke-width:1}.chart-line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.chart-dot{stroke:#031323;stroke-width:2}
+.fifa-card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.fifa-mini{position:relative;min-height:170px;border-radius:24px;padding:16px;background:linear-gradient(160deg,rgba(255,212,71,.25),rgba(0,166,255,.10),rgba(11,45,77,.96));border:1px solid rgba(255,212,71,.32);box-shadow:0 14px 28px rgba(0,0,0,.20);overflow:hidden;cursor:pointer}.fifa-mini:nth-child(2){background:linear-gradient(160deg,rgba(226,232,240,.22),rgba(0,166,255,.10),rgba(11,45,77,.96))}.fifa-mini:nth-child(3){background:linear-gradient(160deg,rgba(205,127,50,.22),rgba(0,166,255,.10),rgba(11,45,77,.96))}.fifa-mini:after{content:'⚽';position:absolute;right:12px;bottom:8px;font-size:3.4rem;opacity:.12}.fifa-rank{font-size:.74rem;color:var(--gold);font-weight:950;letter-spacing:.5px}.fifa-ovr{font-size:2.8rem;line-height:1;color:var(--gold);font-weight:950}.fifa-name{font-size:1rem;color:#fff;font-weight:950;margin:5px 0}.fifa-stats{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:10px}.fifa-stats span{background:rgba(6,26,43,.68);border:1px solid rgba(158,199,230,.16);border-radius:11px;padding:6px;font-size:.66rem;color:var(--muted);font-weight:850}.fifa-stats b{display:block;color:#fff;font-size:.86rem}.world-map{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.team-pill{display:flex;justify-content:space-between;align-items:center;gap:6px;border-radius:13px;padding:8px 10px;background:rgba(6,26,43,.78);border:1px solid rgba(158,199,230,.18);font-size:.72rem;font-weight:850}.team-pill.qualified{border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.10)}.team-pill.pending{border-color:rgba(255,212,71,.28)}.team-pill.eliminated{opacity:.52;filter:grayscale(.25)}.need-card{border-radius:18px;background:rgba(6,26,43,.75);border:1px solid rgba(255,212,71,.22);padding:12px;margin-top:12px}.need-card h3{color:var(--gold);font-size:.92rem;margin-bottom:6px}.need-list{margin:8px 0 0;padding:0;list-style:none}.need-list li{padding:8px 0;border-bottom:1px solid rgba(158,199,230,.12);font-size:.76rem;color:var(--muted)}.need-list li:last-child{border-bottom:0}.share-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.share-btn{border:0;border-radius:999px;padding:9px 13px;background:linear-gradient(135deg,var(--gold),#FFF0A6);color:#06101D;font-weight:950;cursor:pointer}.ghost-btn{border:1px solid rgba(158,199,230,.28);border-radius:999px;padding:9px 13px;background:rgba(6,26,43,.72);color:#fff;font-weight:900;cursor:pointer}.share-status{font-size:.7rem;color:var(--muted);margin-top:6px}
+@media(max-width:800px){.fifa-card-grid,.world-map{grid-template-columns:1fr}.rank-chart{height:300px}}
+
 </style>
 <link rel="stylesheet" href="bracket.css">
 </head>
@@ -230,6 +237,13 @@ body:before{
     <div style="height:10px"></div>
     <div class="card"><div class="section-title">🎯 Acertómetro top 5</div><div class="body" id="top-meter"></div></div>
     <div style="height:10px"></div>
+    <div class="card"><div class="section-title">📈 Gráfica del ranking <span class="chip">top 10</span></div><div class="body"><div class="rank-chart" id="rank-chart"></div></div></div>
+    <div style="height:10px"></div>
+    <div class="card"><div class="section-title">🃏 Cartas FIFA de jugadores <span class="chip">top 3</span></div><div class="body"><div class="fifa-card-grid" id="fifa-cards"></div></div></div>
+    <div style="height:10px"></div>
+    <div class="card"><div class="section-title">🌎 Mapa del Mundial <span class="chip">clasificados · pendientes · eliminados</span></div><div class="body"><div class="world-map" id="world-map"></div></div></div>
+
+    <div style="height:10px"></div>
     <div class="grid2">
       <div class="card"><div class="section-title">👑 Oráculo del Día</div><div class="body" id="oracle-card"></div></div>
       <div class="card"><div class="section-title">🤡 Turista del Mundial</div><div class="body" id="tourist-card"></div></div>
@@ -278,7 +292,7 @@ body:before{
 
   <section id="preds" class="section">
     <div class="card">
-      <div class="section-title">🔮 Predicciones · Eliminatorias <span class="chip">16avos · 8vos · cuartos · semis</span></div>
+      <div class="section-title">🔮 Predicciones · Eliminatorias <span class="chip">16avos activos · lo demás se abre al confirmarse</span></div>
       <div class="body">
         <div class="submenu" style="overflow-x:auto;display:flex;gap:6px;padding-bottom:8px">
           <button class="act" onclick="showSub('preds-ko16',this)">🏆 16avos</button>
@@ -310,7 +324,7 @@ body:before{
 
   <section id="partidos" class="section">
     <div class="card">
-      <div class="section-title">⚽ Partidos <span class="chip">16avos · predicciones · calendario</span></div>
+      <div class="section-title">⚽ Partidos <span class="chip">calendario · predicciones solo con equipos definidos</span></div>
       <div class="body">
         <div class="submenu">
           <button class="act" onclick="showSub('match-preds',this)">🔮 Predicciones por partido</button>
@@ -938,6 +952,63 @@ function renderActivityFeed(){
   if(SURPRISE?.nombre)items.push(['🧨','Sorpresero',SURPRISE.nombre+' · '+(SURPRISE.surpriseHits||0)+' marcadores sorpresa']);
   el.innerHTML=items.slice(0,6).map(x=>'<div class="feed-item"><div class="feed-ico">'+x[0]+'</div><div><div class="feed-title">'+esc(x[1])+'</div><div class="feed-sub">'+esc(x[2])+'</div></div></div>').join('')||'<div class="empty">Aún no hay movimientos para mostrar.</div>';
 }
+
+function ovrFor(p){return Math.max(60,Math.min(99,Math.round((p.pct||0)*0.55+(p.exact||0)*1.2+(p.pos<=3?10:0))))}
+function renderFifaCards(){
+  const el=document.getElementById('fifa-cards'); if(!el)return;
+  el.innerHTML=RANKING.slice(0,3).map(p=>'<div class="fifa-mini" onclick="openProfile(\''+p.id+'\')"><div class="fifa-rank">'+medal(p.pos)+' PUESTO '+p.pos+'</div><div class="fifa-ovr">'+ovrFor(p)+'</div><div class="fifa-name">'+esc(p.nombre)+'</div><div class="fifa-stats"><span><b>'+p.pts+'</b>PTS</span><span><b>'+p.exact+'</b>EXACTOS</span><span><b>'+p.hit+'</b>ACIERTOS</span><span><b>'+p.pct+'%</b>EFECT.</span></div></div>').join('')||'<div class="empty">Cargando cartas...</div>';
+}
+function renderRankingChart(){
+  const el=document.getElementById('rank-chart'); if(!el)return;
+  const top=RANKING.slice(0,10); if(!top.length){el.innerHTML='<div class="empty">Cargando gráfica...</div>';return;}
+  const max=Math.max(1,...top.map(p=>p.pts)); const w=900,h=240,left=145,right=25,barH=16,gap=6;
+  let svg='<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">';
+  for(let i=0;i<=4;i++){const x=left+(w-left-right)*i/4;svg+='<line class="chart-grid" x1="'+x+'" x2="'+x+'" y1="10" y2="225"/><text class="chart-label" x="'+x+'" y="238" text-anchor="middle">'+Math.round(max*i/4)+'</text>'}
+  top.forEach((p,i)=>{const y=18+i*(barH+gap);const bw=(w-left-right)*(p.pts/max);const hue=(i*39)%360;svg+='<text class="chart-name" x="8" y="'+(y+12)+'">'+(i+1)+'. '+esc(p.nombre).slice(0,18)+'</text><rect x="'+left+'" y="'+y+'" width="'+bw+'" height="'+barH+'" rx="8" fill="hsl('+hue+',80%,58%)" opacity=".9"/><text class="chart-label" x="'+(left+bw+7)+'" y="'+(y+12)+'">'+p.pts+'</text>'});
+  svg+='</svg>'; el.innerHTML=svg;
+}
+function allTeamsFromData(){
+  const set=new Set(); MATCHES.forEach(m=>{if(m.local)set.add(m.local);if(m.visitante)set.add(m.visitante)}); return [...set].sort((a,b)=>a.localeCompare(b,'es'));
+}
+function renderWorldMap(){
+  const el=document.getElementById('world-map'); if(!el)return;
+  const qualified=new Set(); const eliminated=new Set();
+  actualQualifiers().forEach(t=>qualified.add(t));
+  const groupTeams=allTeamsFromData().filter(t=>!/^Por definir/i.test(t));
+  groupTeams.forEach(t=>{ if(!qualified.has(t) && MATCHES.some(m=>m.grupo && isFinal(m))) eliminated.add(t); });
+  const phaseHasStarted=knockoutMatches().some(isScoreable);
+  const rows=groupTeams.map(t=>{
+    const cls=qualified.has(t)?'qualified':(phaseHasStarted?'eliminated':'pending');
+    const icon=qualified.has(t)?'🟢':(phaseHasStarted?'⚫':'🟡');
+    return '<div class="team-pill '+cls+'"><span>'+esc(t)+'</span><b>'+icon+'</b></div>';
+  }).join('');
+  el.innerHTML=rows||'<div class="empty">Aún no hay equipos cargados.</div>';
+}
+function shareTextFor(p){return '🏆 Polla Mundial 2026\n'+p.nombre+' va #'+p.pos+' con '+p.pts+' pts\n🎯 '+p.exact+' exactos · ✅ '+p.hit+' aciertos\n👑 Campeón elegido: '+(cleanHonorTeam(p.honor?.campeon)||'—');}
+async function sharePlayer(id){
+  const p=RANKING.find(x=>x.id===id); if(!p)return;
+  const text=shareTextFor(p); const status=document.getElementById('share-status');
+  try{ if(navigator.share){ await navigator.share({title:'Polla Mundial 2026',text}); if(status)status.textContent='Compartido ✅'; }
+    else{ await navigator.clipboard.writeText(text); if(status)status.textContent='Copiado para WhatsApp ✅'; }
+  }catch(e){ try{await navigator.clipboard.writeText(text); if(status)status.textContent='Copiado para WhatsApp ✅';}catch(_){if(status)status.textContent='No se pudo copiar automáticamente.'} }
+}
+function needToWinCard(p){
+  const leader=RANKING[0]; if(!leader||!p)return'';
+  if(p.id===leader.id)return '<div class="need-card"><h3>👑 Qué necesitas para ganar</h3><div class="muted">Vas de primera: necesitas conservar la ventaja en los partidos restantes.</div></div>';
+  const gap=(leader.pts||0)-(p.pts||0); const candidates=[];
+  PENDING.slice().sort((a,b)=>matchTime(a)-matchTime(b)).forEach(m=>{
+    const pr=p.predicciones?.[m.id], lr=leader.predicciones?.[m.id]; if(!pr||!lr)return;
+    const pPts=points(pr.golesLocal,pr.golesVisitante,pr.golesLocal,pr.golesVisitante);
+    const lPts=points(lr.golesLocal,lr.golesVisitante,pr.golesLocal,pr.golesVisitante);
+    const diff=pPts-lPts;
+    if(diff>0)candidates.push({m,pr,diff});
+  });
+  const need=Math.max(1,gap+1); let acc=0; const picks=[];
+  candidates.sort((a,b)=>b.diff-a.diff).forEach(c=>{if(acc<need){acc+=c.diff;picks.push(c)}});
+  const lines=picks.slice(0,6).map(c=>'<li>✅ '+esc(c.m.local)+' '+c.pr.golesLocal+'-'+c.pr.golesVisitante+' '+esc(c.m.visitante)+' <b style="color:var(--gold)">+'+c.diff+' vs líder</b></li>').join('');
+  const msg=picks.length?('Te faltan aprox. <b style="color:var(--gold)">'+need+' pts</b> para pasar al líder. Mejores caminos:'):'No veo partidos pendientes donde esta predicción te dé ventaja directa sobre el líder.';
+  return '<div class="need-card"><h3>🔥 Qué necesitas para ganar</h3><div class="muted">'+msg+'</div><ul class="need-list">'+lines+'</ul><div class="muted" style="font-size:.68rem;margin-top:8px">Cálculo orientativo: compara tus predicciones pendientes contra las del líder actual.</div></div>';
+}
 function renderAll(){
   const leader=RANKING[0]||{}, exactTop=Math.max(0,...RANKING.map(x=>x.exact));
   const fav=CHAMPIONS[0]||{team:'—',n:0};
@@ -950,7 +1021,7 @@ function renderAll(){
   document.getElementById('stat-exact').textContent=exactTop;
   document.getElementById('stat-champ').textContent=fav.team;
   const liveMatches=currentLiveMatches();document.getElementById('live-pill').textContent=liveMatches.length>1?'🔴 '+liveMatches.length+' EN VIVO':(liveMatches.length===1?'🔴 '+liveMatches[0].local+' vs '+liveMatches[0].visitante:'🏆 ELIMINATORIAS');document.getElementById('rbar').innerHTML='<b>Resultados:</b> '+(PLAYED.length?PLAYED.slice(-18).map(m=>esc(m.local.substring(0,3))+'-'+esc(m.visitante.substring(0,3))+' '+m.golesLocal+'-'+m.golesVisitante).join(' · '):'sin partidos finalizados');
-  renderDashboard();renderActivityFeed();renderDaily();renderQuickAwards();renderSurprise();renderCollective();renderChampionCards();renderBotinBalon();renderKOPredictions();renderGroupButtons();renderGroupPredictions();renderTopMeter();renderRanking();renderMatches();renderMatchPredictionTable();renderEliminatorias();renderBadges();renderRarest();
+  renderDashboard();renderActivityFeed();renderRankingChart();renderFifaCards();renderWorldMap();renderDaily();renderQuickAwards();renderSurprise();renderCollective();renderChampionCards();renderBotinBalon();renderKOPredictions();renderGroupButtons();renderGroupPredictions();renderTopMeter();renderRanking();renderMatches();renderMatchPredictionTable();renderEliminatorias();renderBadges();renderRarest();
 }
 function renderDaily(){
   let best=null;
@@ -1082,14 +1153,14 @@ const KO_MATCH_INFO={
   p083:{a:'España',b:'Austria',date:'Jul 2'},p084:{a:'Portugal',b:'Croacia',date:'Jul 2'},
   p085:{a:'Suiza',b:'Argelia',date:'Jul 2'},p086:{a:'Australia',b:'Egipto',date:'Jul 3'},
   p087:{a:'Argentina',b:'Cabo Verde',date:'Jul 3'},p088:{a:'Colombia',b:'Ghana',date:'Jul 3'},
-  p089:{a:'Octavos 1',b:'Octavos 2',date:'Jul 4'},p090:{a:'Octavos 3',b:'Octavos 4',date:'Jul 4'},
-  p091:{a:'Octavos 5',b:'Octavos 6',date:'Jul 5'},p092:{a:'Octavos 7',b:'Octavos 8',date:'Jul 5'},
-  p093:{a:'Octavos 9',b:'Octavos 10',date:'Jul 6'},p094:{a:'Octavos 11',b:'Octavos 12',date:'Jul 6'},
-  p095:{a:'Octavos 13',b:'Octavos 14',date:'Jul 7'},p096:{a:'Octavos 15',b:'Octavos 16',date:'Jul 7'},
-  p097:{a:'Cuartos 1',b:'Cuartos 2',date:'Jul 9'},p098:{a:'Cuartos 3',b:'Cuartos 4',date:'Jul 10'},
-  p099:{a:'Cuartos 5',b:'Cuartos 6',date:'Jul 11'},p100:{a:'Cuartos 7',b:'Cuartos 8',date:'Jul 11'},
-  p101:{a:'Semi 1',b:'Semi 2',date:'Jul 14'},p102:{a:'Semi 3',b:'Semi 4',date:'Jul 15'},
-  p103:{a:'Final A',b:'Final B',date:'Jul 19'},p104:{a:'3er Puesto A',b:'3er Puesto B',date:'Jul 18'},
+  p089:{a:'Por definir',b:'Por definir',date:'Jul 4'},p090:{a:'Por definir',b:'Por definir',date:'Jul 4'},
+  p091:{a:'Por definir',b:'Por definir',date:'Jul 5'},p092:{a:'Por definir',b:'Por definir',date:'Jul 5'},
+  p093:{a:'Por definir',b:'Por definir',date:'Jul 6'},p094:{a:'Por definir',b:'Por definir',date:'Jul 6'},
+  p095:{a:'Por definir',b:'Por definir',date:'Jul 7'},p096:{a:'Por definir',b:'Por definir',date:'Jul 7'},
+  p097:{a:'Por definir',b:'Por definir',date:'Jul 9'},p098:{a:'Por definir',b:'Por definir',date:'Jul 10'},
+  p099:{a:'Por definir',b:'Por definir',date:'Jul 11'},p100:{a:'Por definir',b:'Por definir',date:'Jul 11'},
+  p101:{a:'Por definir',b:'Por definir',date:'Jul 14'},p102:{a:'Por definir',b:'Por definir',date:'Jul 15'},
+  p103:{a:'Por definir',b:'Por definir',date:'Jul 19'},p104:{a:'Por definir',b:'Por definir',date:'Jul 18'},
 };
 function koPredCard(matchId){
   const info=KO_MATCH_INFO[matchId];if(!info)return'';
@@ -1118,9 +1189,9 @@ function renderKOPredictions(){
   const el4=document.getElementById('preds-ko4-content');
   const elsf=document.getElementById('preds-kosf-content');
   if(el16)el16.innerHTML='<p class="ko-status">Predicciones de la polla para los 16avos de Final. Puntos: marcador exacto = 5+goles, resultado = 3 pts, gol exacto = goles.</p>'+['p073','p074','p075','p076','p077','p078','p079','p080','p081','p082','p083','p084','p085','p086','p087','p088'].map(koPredCard).join('');
-  if(el8)el8.innerHTML='<p class="ko-status">Predicciones para Octavos de Final (Jul 4–7). Los equipos se confirman con los resultados de 16avos.</p>'+['p089','p090','p091','p092','p093','p094','p095','p096'].map(koPredCard).join('');
-  if(el4)el4.innerHTML='<p class="ko-status">Predicciones para Cuartos de Final (Jul 9–11).</p>'+['p097','p098','p099','p100'].map(koPredCard).join('');
-  if(elsf)elsf.innerHTML='<p class="ko-status">Predicciones para Semifinales (Jul 14–15) y Final (Jul 19).</p>'+['p101','p102','p103','p104'].map(koPredCard).join('');
+  if(el8)el8.innerHTML='<p class="ko-status">⏳ Octavos todavía no se muestran porque dependen de quién avance en 16avos. Se activan cuando estén definidos los cruces.</p><div class="empty">Aún no sabemos quién juega octavos.</div>';
+  if(el4)el4.innerHTML='<p class="ko-status">⏳ Cuartos se activan cuando estén definidos los cruces.</p><div class="empty">Aún no sabemos quién juega cuartos.</div>';
+  if(elsf)elsf.innerHTML='<p class="ko-status">⏳ Semifinales y final se activan cuando avance el torneo.</p><div class="empty">Aún no sabemos quién juega estas fases.</div>';
 }
 function championBars(arr, full=false){
   const max=Math.max(1,...arr.map(x=>x.n));
@@ -1281,7 +1352,7 @@ function renderBadges(){
     ['🧨','Rey del Batacazo','Acertó el resultado menos predicho del torneo',batacazoWinner||golpe,batacazoEvent?esc(batacazoEvent.m.local)+' '+batacazoEvent.m.golesLocal+'-'+batacazoEvent.m.golesVisitante+' '+esc(batacazoEvent.m.visitante)+' · '+batacazoEvent.exactCount+' exactos':'—'],
     ['🏆','Rey del Mundial','Líder de la clasificación general',leader,(leader.pts||0)+' pts · #1 general']
   ];
-  document.getElementById('badges').innerHTML=data.map(x=>'<div class="badge-card"><div class="badge-ico">'+x[0]+'</div><div><div class="badge-title">'+x[1]+'</div><div class="award-desc">'+x[2]+'</div><div class="badge-winner">'+esc(x[3]?.nombre||'—')+' · '+x[4]+'</div></div></div>').join('');
+  document.getElementById('badges').innerHTML=data.map(x=>'<div class="badge-card"><div class="badge-ico">'+x[0]+'</div><div><div class="badge-title">'+x[1]+'</div><div class="badge-winner">'+esc(x[3]?.nombre||'—')+' · '+x[4]+'</div></div></div>').join('');
 }
 function renderRarest(){
   document.getElementById('rarest-results').innerHTML=RARE_EVENTS.slice(0,10).map(e=>'<div class="match-card"><div><b>'+esc(e.m.local)+' '+e.m.golesLocal+'-'+e.m.golesVisitante+' '+esc(e.m.visitante)+'</b><div class="muted" style="font-size:.68rem">Solo '+e.exactCount+' exactos · '+e.outcomeCount+' acertaron resultado</div></div><div class="score">🔥</div></div>').join('')||'<div class="empty">Sin resultados finalizados.</div>';
@@ -1291,7 +1362,7 @@ function openProfile(id){
   document.getElementById('prof-name').textContent=medal(p.pos)+' '+p.nombre;
   const ovr=Math.max(60,Math.min(99,Math.round((p.pct||0)*0.55+(p.exact||0)*1.2+(p.pos<=3?10:0))));
   const pc=document.getElementById('prof-card');
-  if(pc){pc.innerHTML='<div class="player-card"><div class="ovr">'+ovr+'</div><div class="pc-name">'+esc(p.nombre)+'</div><div class="pc-meta">#'+p.pos+' · '+p.pts+' pts · '+p.exact+' exactos · '+p.hit+'/'+PLAYED.length+' aciertos</div><div class="share-note">📲 Lista para captura de pantalla y compartir en WhatsApp.</div></div>';}
+  if(pc){pc.innerHTML='<div class="player-card"><div class="ovr">'+ovr+'</div><div class="pc-name">'+esc(p.nombre)+'</div><div class="pc-meta">#'+p.pos+' · '+p.pts+' pts · '+p.exact+' exactos · '+p.hit+'/'+PLAYED.length+' aciertos</div><div class="share-actions"><button class="share-btn" onclick="sharePlayer(\''+p.id+'\')">📲 Compartir</button><button class="ghost-btn" onclick="navigator.clipboard&&navigator.clipboard.writeText(shareTextFor(RANKING.find(x=>x.id===\''+p.id+'\')))">Copiar texto</button></div><div class="share-status" id="share-status">Lista para captura o WhatsApp.</div></div>'+needToWinCard(p);}
   document.getElementById('prof-grid').innerHTML=[
     ['Posición','#'+p.pos],['Puntos',p.pts],['Puntos posiciones',p.groupPosPts||0],['Grupos cerrados',p.groupPosClosed||0],['Aciertos',p.hit+'/'+PLAYED.length],['Exactos',p.exact],['Efectividad',p.pct+'%'],['Campeón',cleanHonorTeam(p.honor?.campeon)||'—'],['Subcampeón',cleanHonorTeam(p.honor?.subcampeon)||'—'],['Sorpresas',p.surpriseHits||0]
   ].map(r=>'<div class="prof-stat"><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>').join('');
@@ -1301,7 +1372,7 @@ function openProfile(id){
 function closeProfile(){document.getElementById('profile').classList.remove('act')}
 function show(id,btn){document.querySelectorAll('.section').forEach(s=>s.classList.remove('act'));document.getElementById(id).classList.add('act');document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('act'));btn?.classList.add('act');syncBottom(id)}
 function showMobile(id,btn){document.querySelectorAll('.section').forEach(s=>s.classList.remove('act'));document.getElementById(id).classList.add('act');document.querySelectorAll('.bottom button').forEach(b=>b.classList.remove('act'));btn?.classList.add('act');document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('act'))}
-function syncBottom(id){const buttons=[...document.querySelectorAll('.bottom button')];buttons.forEach(b=>b.classList.remove('act'));const idx={inicio:0,ranking:1,partidos:2,eliminatorias:3,bracket:4,preds:5,salon:6}[id];if(idx!==undefined)buttons[idx].classList.add('act')}
+function syncBottom(id){const buttons=[...document.querySelectorAll('.bottom button')];buttons.forEach(b=>b.classList.remove('act'));const idx={inicio:0,ranking:1,partidos:2,bracket:3,eliminatorias:4,preds:5,salon:6}[id];if(idx!==undefined)buttons[idx].classList.add('act')}
 
 loadData();
 // Refresca automáticamente los JSON sin recargar la página.

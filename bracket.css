@@ -5,16 +5,16 @@
 
 /* ── Variables locales del bracket ──────────────────────────── */
 .bracket-root {
-  --br-bg:        #031323;
-  --br-card:      #08223A;
-  --br-card2:     #0B2D4D;
-  --br-border:    #2C5D82;
-  --br-gold:      #FFD447;
-  --br-green:     #22C55E;
-  --br-blue:      #00A6FF;
-  --br-gray:      #5B7083;
-  --br-muted:     #9EC7E6;
-  --br-white:     #F8FAFC;
+  --br-bg:        #07233d;
+  --br-card:      #0a2e4a;
+  --br-card2:     #0c3a5c;
+  --br-border:    #1f5f7a;
+  --br-gold:      #ffd447;
+  --br-green:     #0fb36d;
+  --br-blue:      #00a6ff;
+  --br-gray:      #3a5a72;
+  --br-muted:     #7ab8d4;
+  --br-white:     #fffaf0;
   --br-elim:      #314d5e;
   --br-pending-border: #3a5a72;
   --br-live-border:    #00a6ff;
@@ -363,12 +363,3 @@
 @keyframes br-spin {
   to { transform: rotate(360deg); }
 }
-
-
-/* ============================================================
-   V2 PREMIUM — Bracket FIFA look · visual only
-   ============================================================ */
-.bracket-root{background:radial-gradient(circle at top left,rgba(0,166,255,.16),transparent 28%),linear-gradient(180deg,#061A2B,#031323)!important;border-radius:22px;color:var(--br-white)}
-.bracket-header{background:linear-gradient(90deg,rgba(0,166,255,.18),rgba(255,212,71,.12),rgba(34,197,94,.08))!important;border-bottom:1px solid rgba(255,212,71,.24)!important}.bracket-header h2{text-shadow:0 0 18px rgba(255,212,71,.26)}
-.br-phase-label{background:rgba(11,45,77,.72)!important;border:1px solid rgba(158,199,230,.22)!important;color:var(--br-gold)!important;border-radius:999px!important}.br-match{background:linear-gradient(180deg,rgba(11,45,77,.98),rgba(6,26,43,.98))!important;border:1px solid rgba(158,199,230,.24)!important;box-shadow:0 12px 26px rgba(0,0,0,.26)!important}.br-match.done{border-color:rgba(34,197,94,.55)!important}.br-match.live{border-color:rgba(0,166,255,.75)!important;box-shadow:0 0 24px rgba(0,166,255,.16)!important}.br-match.pending{opacity:.92}.br-match-title{color:var(--br-muted)!important}.br-team{border-radius:10px;padding:5px 6px}.br-team.winner{background:linear-gradient(90deg,rgba(255,212,71,.18),rgba(34,197,94,.10))}.br-team.winner .br-team-name{color:var(--br-gold)!important}.br-team.loser{filter:grayscale(.25);opacity:.62}.br-team-score{color:var(--br-gold)!important}.br-connectors path,.br-connectors line{stroke:rgba(255,212,71,.48)!important}.br-final .br-match,.br-phase.final .br-match{border-color:rgba(255,212,71,.55)!important;box-shadow:0 0 30px rgba(255,212,71,.12),0 14px 30px rgba(0,0,0,.28)!important}.br-legend-dot.live{box-shadow:0 0 12px rgba(0,166,255,.55)}.br-legend-dot.done{box-shadow:0 0 12px rgba(34,197,94,.45)}
-@media(prefers-reduced-motion:no-preference){.br-match.live{animation:brLivePulse 1.8s ease-in-out infinite}@keyframes brLivePulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}}
