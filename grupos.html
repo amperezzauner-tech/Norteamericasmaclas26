@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>👥 Grupos — Polla FIFA 2026</title>
+<!-- Firebase v9 compat — más estable que v10 para páginas estáticas -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a1628;color:#fff;min-height:100vh}
+.hdr{background:#0d2137;padding:13px 16px;border-bottom:3px solid #c8a200;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:30}
+.hdr-title{font-size:.95rem;font-weight:700;color:#f5d020}
+.hdr-sub{font-size:.65rem;color:#8ab4d4;margin-top:2px}
+.back-a{background:#132840;border:1px solid #1e3a55;color:#8ab4d4;border-radius:8px;padding:5px 12px;font-size:.72rem;text-decoration:none;display:inline-block}
+.cambiar-btn{background:transparent;border:1px solid #2a5070;color:#6a8faa;border-radius:6px;padding:4px 10px;font-size:.68rem;cursor:pointer;display:none}
+.screen{display:none}.screen.act{display:block}
+.pb{padding-bottom:80px}
+.card{background:#0d2137;border:1px solid #1e3a55;border-radius:12px;overflow:hidden;margin-bottom:10px}
+.ch{background:#1a3a5c;padding:11px 16px;border-bottom:1px solid #1e3a55}
+.cb{padding:12px 14px}
+input[type=text],input[type=password]{width:100%;padding:9px 14px;border-radius:8px;border:1px solid #2a5070;background:#132840;color:#fff;font-size:.85rem;outline:none}
+input::placeholder{color:#6a8faa}
+.btn{border:none;border-radius:8px;font-weight:700;cursor:pointer}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.bg{background:#c8a200;color:#000;padding:10px 20px;font-size:.82rem}
+.bsm{padding:5px 12px;font-size:.72rem}
+.bgh{background:transparent;color:#8ab4d4;border:1px solid #2a5070;padding:5px 12px;font-size:.72rem}
+.bred{background:#5c1a1a;color:#e74c3c;padding:5px 12px;font-size:.72rem}
+.bgr{background:#4cde7a;color:#000;padding:5px 12px;font-size:.72rem}
+.bfull{width:100%;padding:12px;font-size:.85rem}
+.tnav{display:flex;background:#0d2137;border-bottom:2px solid #1e3a55}
+.tnav button{flex:1;padding:10px 4px;border:none;background:transparent;cursor:pointer;font-size:.68rem;font-weight:700;text-transform:uppercase;color:#6a8faa;border-bottom:3px solid transparent}
+.tnav button.act{color:#f5d020;border-bottom-color:#f5d020}
+.tpanel{display:none}.tpanel.act{display:block}
+.rtable{width:100%;border-collapse:collapse}
+.rtable thead th{background:#1a3a5c;padding:9px 8px;font-size:.65rem;text-transform:uppercase;color:#8ab4d4;border-bottom:2px solid #c8a200}
+.rtable tbody td{padding:10px 8px;font-size:.88rem;border-bottom:1px solid #132840}
+.merow{background:#0d2a3d!important}
+.gcard{background:#0d2137;border:1px solid #1e3a55;border-radius:12px;overflow:hidden;margin-bottom:10px;cursor:pointer}
+.gcard:hover{border-color:#c8a200}
+.gch{background:#1a3a5c;padding:11px 14px;display:flex;justify-content:space-between;align-items:center}
+.gstats{display:flex;gap:16px;padding:10px 14px}
+.gsv{color:#f5d020;font-weight:700;font-size:1.1rem;text-align:center}
+.gsl{color:#6a8faa;font-size:.62rem;text-align:center}
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e3a55}
+.mrow:last-child{border-bottom:none}
+.ctag{background:#132840;color:#f5d020;padding:3px 10px;border-radius:6px;font-family:monospace;letter-spacing:2px;font-size:.88rem}
+.badgeg{background:#c8a20022;color:#f5d020;border:1px solid #c8a20044;border-radius:6px;padding:2px 8px;font-size:.68rem;font-weight:700}
+.badgeb{background:#2e86de22;color:#8ab4d4;border:1px solid #2e86de44;border-radius:6px;padding:2px 8px;font-size:.68rem;font-weight:700}
+.badgegr{background:#4cde7a22;color:#4cde7a;border:1px solid #4cde7a44;border-radius:6px;padding:2px 8px;font-size:.68rem;font-weight:700}
+.chk{width:20px;height:20px;border-radius:4px;border:2px solid #2a5070;background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.chk.on{background:#c8a200;border-color:#c8a200;color:#000}
+.empty{color:#6a8faa;font-size:.82rem;padding:16px 0;text-align:center}
+.errmsg{color:#e74c3c;font-size:.75rem;margin-top:6px}
+.ibox{background:#132840;border:1px solid #1e3a55;border-radius:8px;padding:10px 12px;font-size:.72rem;color:#8ab4d4;line-height:1.5}
+#loading{position:fixed;inset:0;background:#0a1628;z-index:99;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.spin{width:34px;height:34px;border:3px solid #1e3a55;border-top-color:#f5d020;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:20px;font-size:.78rem;font-weight:700;z-index:99;opacity:0;transition:opacity .3s;pointer-events:none}
+/* PIN */
+.modal-bg{position:fixed;inset:0;background:#000000aa;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#0d2137;border:2px solid #c8a200;border-radius:16px;padding:24px;width:100%;max-width:340px;text-align:center}
+.pdots{display:flex;justify-content:center;gap:14px;margin:16px 0}
+.pdot{width:14px;height:14px;border-radius:50%;border:2px solid #2a5070;background:transparent;transition:background .15s}
+.pdot.on{background:#c8a200;border-color:#c8a200}
+.ppad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.pkey{background:#1a3a5c;border:1px solid #1e3a55;border-radius:10px;padding:15px;font-size:1.1rem;font-weight:700;cursor:pointer;transition:background .1s}
+.pkey:hover{background:#2a5070}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spin"></div>
+  <span style="font-size:.82rem;color:#8ab4d4" id="loading-msg">Conectando...</span>
+</div>
+
+<!-- PIN Modal -->
+<div id="pin-modal" style="display:none" class="modal-bg">
+  <div class="modal">
+    <div id="pin-title" style="font-size:.95rem;font-weight:700;color:#f5d020;margin-bottom:4px">🔐 PIN de Administrador</div>
+    <div id="pin-sub" style="font-size:.7rem;color:#8ab4d4;margin-bottom:8px">Ingresa el PIN para continuar</div>
+    <div class="pdots">
+      <div class="pdot" id="pd0"></div><div class="pdot" id="pd1"></div>
+      <div class="pdot" id="pd2"></div><div class="pdot" id="pd3"></div>
+    </div>
+    <div id="pin-err" style="color:#e74c3c;font-size:.75rem;min-height:18px"></div>
+    <div class="ppad">
+      <div class="pkey" onclick="pk('1')">1</div><div class="pkey" onclick="pk('2')">2</div><div class="pkey" onclick="pk('3')">3</div>
+      <div class="pkey" onclick="pk('4')">4</div><div class="pkey" onclick="pk('5')">5</div><div class="pkey" onclick="pk('6')">6</div>
+      <div class="pkey" onclick="pk('7')">7</div><div class="pkey" onclick="pk('8')">8</div><div class="pkey" onclick="pk('9')">9</div>
+      <div class="pkey" onclick="pk('del')" style="color:#8ab4d4">⌫</div>
+      <div class="pkey" onclick="pk('0')">0</div>
+      <div class="pkey" onclick="pk('x')" style="color:#e74c3c">✕</div>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="hdr">
+  <div>
+    <div class="hdr-title" id="hdr-title">👥 Grupos Privados</div>
+    <div class="hdr-sub" id="hdr-sub">Polla FIFA 2026</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="cambiar-btn" id="btn-cambiar" onclick="logout()">Cambiar</button>
+    <a href="index.html" class="back-a">← Polla</a>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="sc-login" class="screen pb">
+  <div style="max-width:440px;margin:24px auto;padding:0 16px">
+    <div class="card">
+      <div class="ch">
+        <div style="color:#f5d020;font-weight:700;font-size:.9rem">¿Quién eres?</div>
+        <div style="font-size:.7rem;color:#8ab4d4;margin-top:4px">Selecciona tu nombre para entrar</div>
+      </div>
+      <div class="cb">
+        <input type="text" id="login-q" placeholder="🔍 Buscar tu nombre..." oninput="filterLogin(this.value)" autocomplete="off">
+        <div style="margin-top:10px;max-height:340px;overflow-y:auto" id="login-list"></div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:10px;font-size:.7rem;color:#6a8faa">
+      🔒 Los grupos se sincronizan entre todos los dispositivos en tiempo real
+    </div>
+  </div>
+</div>
+
+<!-- LIST -->
+<div id="sc-list" class="screen pb">
+  <div style="padding:14px 14px 0">
+    <div class="card">
+      <div class="ch"><span style="color:#f5d020;font-weight:700;font-size:.85rem">🔗 Unirse con código</span></div>
+      <div class="cb" style="display:flex;gap:8px">
+        <input type="text" id="join-code" placeholder="Código (ej: AB12CD)" style="flex:1;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" autocomplete="off">
+        <button class="btn bg bsm" onclick="joinByCode()">Unirse</button>
+      </div>
+      <div id="join-err" style="padding:0 14px 8px;font-size:.72rem;color:#e74c3c;display:none"></div>
+    </div>
+  </div>
+  <div style="padding:10px 14px 0">
+    <div style="font-size:.7rem;color:#8ab4d4;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Mis grupos</div>
+    <div id="my-groups"><div class="empty">Cargando...</div></div>
+  </div>
+  <div style="padding:14px">
+    <button class="btn bg bfull" onclick="goScreen('create')">➕ Crear nuevo grupo</button>
+  </div>
+</div>
+
+<!-- CREATE -->
+<div id="sc-create" class="screen pb">
+  <div style="padding:14px">
+    <div class="card" style="margin-bottom:12px">
+      <div class="ch"><span style="color:#f5d020;font-weight:700;font-size:.85rem">📝 Nombre del grupo</span></div>
+      <div class="cb"><input type="text" id="new-name" placeholder="Ej: Familia Olarte, Los del Café..."></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="ch">
+        <span style="color:#f5d020;font-weight:700;font-size:.85rem">🔐 PIN de administrador</span>
+        <div style="font-size:.7rem;color:#8ab4d4;margin-top:3px">4 dígitos · te lo pedirá para gestionar el grupo</div>
+      </div>
+      <div class="cb" style="display:flex;gap:8px;align-items:center">
+        <input type="password" id="new-pin" placeholder="Ej: 2026" maxlength="4"
+          style="flex:1;letter-spacing:8px;font-size:1.2rem;text-align:center"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
+        <span style="font-size:.72rem;color:#6a8faa;white-space:nowrap">4 dígitos</span>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="ch">
+        <span style="color:#f5d020;font-weight:700;font-size:.85rem">🎲 Apuestas especiales</span>
+        <div style="font-size:.7rem;color:#8ab4d4;margin-top:3px">Opcionales</div>
+      </div>
+      <div class="cb" id="bets-create"></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="ch">
+        <span style="color:#f5d020;font-weight:700;font-size:.85rem">👥 Participantes</span>
+        <span id="mem-cnt" style="color:#8ab4d4;font-size:.72rem;float:right"></span>
+      </div>
+      <div class="cb">
+        <input type="text" id="mem-q" placeholder="🔍 Buscar..." oninput="filterMem(this.value)" style="margin-bottom:8px">
+        <div id="mem-list" style="max-height:260px;overflow-y:auto"></div>
+      </div>
+    </div>
+    <div id="create-err" style="display:none" class="errmsg"></div>
+    <button class="btn bg bfull" id="create-btn" onclick="createGroup()">🚀 Crear grupo</button>
+    <button class="btn bgh bfull" style="margin-top:8px" onclick="goScreen('list')">Cancelar</button>
+  </div>
+</div>
+
+<!-- DETAIL -->
+<div id="sc-detail" class="screen">
+  <div class="tnav">
+    <button class="act" onclick="dtab('ranking',this)">Ranking</button>
+    <button onclick="dtab('miembros',this)">Miembros</button>
+    <button id="btn-apuestas" onclick="dtab('apuestas',this)" style="display:none">Apuestas</button>
+  </div>
+  <div id="dp-ranking" class="tpanel act pb">
+    <div id="grp-rank"></div>
+    <div style="padding:10px 14px">
+      <div class="ibox">ℹ️ Los puntos son los mismos de la polla principal.</div>
+    </div>
+  </div>
+  <div id="dp-miembros" class="tpanel pb">
+    <div style="padding:12px 14px">
+      <div id="add-mem-sec"></div>
+      <div id="mem-detail"></div>
+      <div id="leave-sec" style="margin-top:16px"></div>
+    </div>
+  </div>
+  <div id="dp-apuestas" class="tpanel pb">
+    <div style="padding:12px 14px">
+      <div id="bets-detail"></div>
+      <div id="my-bets"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// FIREBASE CONFIG — ya configurado con tu proyecto
+// ═══════════════════════════════════════════════════════
+const FB_CFG = {
+  apiKey:            "AIzaSyC0gMdgEwRgLYl04joznnH-YVHCDnZ5B8Y",
+  authDomain:        "polla2026-d5b70.firebaseapp.com",
+  projectId:         "polla2026-d5b70",
+  storageBucket:     "polla2026-d5b70.firebasestorage.app",
+  messagingSenderId: "523205939411",
+  appId:             "1:523205939411:web:75f481332a1fdc4b8dc426"
+};
+
+// ═══════════════════════════════════════════════════════
+// PARTICIPANTES Y PUNTAJES
+// ═══════════════════════════════════════════════════════
+const PARTS = ["Fabian Morales","Juliana Silva","Alejandro Lisson","Andres Merizalde","Carlos Vergara","Eduardo Rangel","Andres Gamboa","Reinaldo Acosta","Ana Maria Perez","Mark Mordo","Felipe Chalela","Jennie Levitt","Nicolas Reyes","Christian Kling","Rodrigo Gonzalez","Juan Carlos Rebolledo","Ernesto Samper","Fernando Arana","Juan Roberto Gomez","Veronica Skinner","Daniel Gomez","Juan Diego Martinez","Pablo Andrade","Pablo Andrade 2","Andres Sarmiento","Juan Jose Olarte","Benjamin Olarte","Pablo Gomez","Alejandro Gonzalez","Andres Felipe Olarte","Edith Vargas","Enrique Casas","Andres Mejia","Antonia Quijano","Eva Kling","Joey Borrero","Agustin Vejarano","Alfonso Vejarano","Ferney Ardila","Ricardo Sarmiento","Daniel Mor","Jaime Mor","Alberto Fonseca","Alejandro Hernandez","Daniel Escobar","Mauricio Quiroga","Sebastian Manzanera","Augusto Hernandez","Billy Belzner","Juan Martin Mejia","Mauricio Posse","Daniel Gonzalez","Jaime Silva","Javier Ropero","Juan Miguel Olarte","Nicolas De Narvaez","Andres Cadena","Armando Benito Revollo","Diego Perez","Mauricio Borrero","Alvaro Acosta","Andres Silva","Bianca Olarte","Daniel Mordo","Diego Rios","Juan Pablo Duran","Felipe Merizalde","Jorge Tirado","Luis Felipe Aparicio","Dayana Cruz","Laura Molina","Andrea Mordo","Daniel Pombo","Federico Camacho","Santiago Rendon","Camilo Pomares","Cristian Ardila","Jose Pablo Reyes","Monica Zauner","Javier Tafur","Luis Francisco Fracica","Santiago Urdaneta","Juan Carlos Osorio","Luis Enrique Bermudez","Phyllis Conn","Alejandro Arias","Felipe Gaitan","Fernando Ortiz","Andres Olarte","Juan Pablo Delgado","Katerin Hernandez","Adriana Zauner","Erika Padilla","Jairo Rios","Alejandro Escallon Papa","Andres Rodriguez","Daniel Herrera","Erich Riano","Mariana Reyes","Sergio Rodriguez","Juan Manuel Matiz","Santiago Acevedo","Sinda Mendizabal","Alejandro Escallon Hijo","Javier Garcia","Santiago Mejia","Alejandro Arbelaez","Alejandro Paez","Juan Manuel Perez","Pedro Montano","Rebecca Borrero","Fernando Pineros","Alejandro Gonzalex"];
+
+const PTS = {"Fabian Morales":115,"Juliana Silva":115,"Alejandro Lisson":113,"Andres Merizalde":113,"Carlos Vergara":109,"Eduardo Rangel":109,"Andres Gamboa":107,"Reinaldo Acosta":107,"Ana Maria Perez":106,"Mark Mordo":106,"Felipe Chalela":104,"Jennie Levitt":103,"Nicolas Reyes":103,"Christian Kling":102,"Rodrigo Gonzalez":102,"Juan Carlos Rebolledo":101,"Ernesto Samper":98,"Fernando Arana":97,"Juan Roberto Gomez":100,"Veronica Skinner":101,"Daniel Gomez":103,"Juan Diego Martinez":99,"Pablo Andrade":96,"Pablo Andrade 2":98,"Andres Sarmiento":99,"Juan Jose Olarte":98,"Benjamin Olarte":94,"Pablo Gomez":98,"Alejandro Gonzalez":96,"Andres Felipe Olarte":97,"Edith Vargas":96,"Enrique Casas":100,"Andres Mejia":95,"Antonia Quijano":99,"Eva Kling":94,"Joey Borrero":94,"Agustin Vejarano":91,"Alfonso Vejarano":91,"Ferney Ardila":95,"Ricardo Sarmiento":95,"Daniel Mor":94,"Jaime Mor":97,"Alberto Fonseca":89,"Alejandro Hernandez":93,"Daniel Escobar":92,"Mauricio Quiroga":92,"Sebastian Manzanera":92,"Augusto Hernandez":87,"Billy Belzner":95,"Juan Martin Mejia":91,"Mauricio Posse":90,"Daniel Gonzalez":91,"Jaime Silva":89,"Javier Ropero":89,"Juan Miguel Olarte":94,"Nicolas De Narvaez":94,"Andres Cadena":90,"Armando Benito Revollo":90,"Diego Perez":93,"Mauricio Borrero":89,"Alvaro Acosta":84,"Andres Silva":89,"Bianca Olarte":89,"Daniel Mordo":87,"Diego Rios":89,"Juan Pablo Duran":85,"Felipe Merizalde":88,"Jorge Tirado":91,"Luis Felipe Aparicio":86,"Dayana Cruz":86,"Laura Molina":85,"Andrea Mordo":88,"Daniel Pombo":83,"Federico Camacho":81,"Santiago Rendon":85,"Camilo Pomares":86,"Cristian Ardila":84,"Jose Pablo Reyes":87,"Monica Zauner":82,"Javier Tafur":82,"Luis Francisco Fracica":83,"Santiago Urdaneta":86,"Juan Carlos Osorio":85,"Luis Enrique Bermudez":85,"Phyllis Conn":88,"Alejandro Arias":78,"Felipe Gaitan":80,"Fernando Ortiz":84,"Andres Olarte":79,"Juan Pablo Delgado":83,"Katerin Hernandez":92,"Adriana Zauner":78,"Erika Padilla":82,"Jairo Rios":75,"Alejandro Escallon Papa":73,"Andres Rodriguez":81,"Daniel Herrera":76,"Erich Riano":81,"Mariana Reyes":74,"Sergio Rodriguez":78,"Juan Manuel Matiz":77,"Santiago Acevedo":79,"Sinda Mendizabal":71,"Alejandro Escallon Hijo":74,"Javier Garcia":77,"Santiago Mejia":66,"Alejandro Arbelaez":68,"Alejandro Paez":69,"Juan Manuel Perez":62,"Pedro Montano":61,"Rebecca Borrero":69,"Fernando Pineros":65,"Alejandro Gonzalex":0};
+
+const BETS = [
+  {id:"champion",   lbl:"🏆 Campeón del Mundial",          t:"team"},
+  {id:"runner_up",  lbl:"🥈 Subcampeón",                   t:"team"},
+  {id:"third",      lbl:"🥉 Tercer puesto",                 t:"team"},
+  {id:"top_scorer", lbl:"👟 Botín de Oro (goleador)",       t:"player"},
+  {id:"ballon",     lbl:"⭐ Balón de Oro (mejor jugador)",  t:"player"},
+  {id:"grpA1",      lbl:"Grupo A — 1er lugar",             t:"team"},
+  {id:"grpBlast",   lbl:"Grupo B — Último lugar",          t:"team"},
+  {id:"grpC1",      lbl:"Grupo C — 1er lugar",             t:"team"},
+  {id:"grpH1",      lbl:"Grupo H — 1er lugar",             t:"team"},
+  {id:"grpL1",      lbl:"Grupo L — 1er lugar",             t:"team"},
+];
+
+// ═══════════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ═══════════════════════════════════════════════════════
+var db, auth, unsub;
+var ME = null, GRUPOS = [], ACTIVE = null;
+var USE_FB = false;
+var PIN_VAL = '', PIN_CB = null, PIN_GID = null;
+var SEL_MEM = [], SEL_BETS = [];
+
+// ═══════════════════════════════════════════════════════
+// INIT — se ejecuta cuando todo el DOM está listo
+// ═══════════════════════════════════════════════════════
+function init() {
+  // Safety net: si algo falla, mostrar la app después de 5 segundos
+  var safetyTimer = setTimeout(function() {
+    console.warn('Safety timeout — mostrando app sin Firebase');
+    USE_FB = false;
+    afterAuth();
+  }, 5000);
+
+  function doInit() {
+    clearTimeout(safetyTimer);
+    try {
+      // Evitar error si ya fue inicializado (p.ej. recarga de página)
+      if (typeof firebase === 'undefined') {
+        throw new Error('Firebase SDK no cargó');
+      }
+      if (firebase.apps && firebase.apps.length > 0) {
+        db   = firebase.app().firestore();
+        auth = firebase.app().auth();
+      } else {
+        firebase.initializeApp(FB_CFG);
+        db   = firebase.firestore();
+        auth = firebase.auth();
+      }
+      USE_FB = true;
+      setMsg('Iniciando sesión...');
+      auth.signInAnonymously()
+        .then(function() { afterAuth(); })
+        .catch(function(e) {
+          console.warn('Auth anónima falló (¿está habilitada en Firebase Console?):', e.code);
+          USE_FB = false;
+          afterAuth();
+        });
+    } catch(e) {
+      console.warn('Firebase init falló, modo local:', e.message);
+      USE_FB = false;
+      afterAuth();
+    }
+  }
+
+  // Esperar a que firebase esté definido (hasta 3 segundos)
+  if (typeof firebase !== 'undefined') {
+    doInit();
+  } else {
+    var attempts = 0;
+    var check = setInterval(function() {
+      attempts++;
+      if (typeof firebase !== 'undefined') {
+        clearInterval(check);
+        doInit();
+      } else if (attempts >= 30) { // 3 segundos (30 x 100ms)
+        clearInterval(check);
+        clearTimeout(safetyTimer);
+        console.warn('Firebase nunca cargó, usando modo local');
+        USE_FB = false;
+        afterAuth();
+      }
+    }, 100);
+  }
+}
+
+function afterAuth() {
+  // Check localStorage for saved user
+  var saved = '';
+  try { saved = localStorage.getItem('polla_user') || ''; } catch(e) {}
+  if (saved && PARTS.indexOf(saved) >= 0) {
+    ME = saved;
+    loadGroups(function() { goScreen('list'); hideLoading(); });
+  } else {
+    goScreen('login');
+    filterLogin('');
+    hideLoading();
+  }
+}
+
+function hideLoading() {
+  var el = document.getElementById('loading');
+  if (el) el.style.display = 'none';
+}
+
+function setMsg(m) {
+  var el = document.getElementById('loading-msg');
+  if (el) el.textContent = m;
+}
+
+// ═══════════════════════════════════════════════════════
+// FIRESTORE / LOCAL STORAGE
+// ═══════════════════════════════════════════════════════
+function loadGroups(cb) {
+  if (!USE_FB || !db) {
+    try { GRUPOS = JSON.parse(localStorage.getItem('polla_grupos') || '[]'); } catch(e) { GRUPOS = []; }
+    if (cb) cb();
+    return;
+  }
+  if (unsub) unsub();
+  var q = db.collection('grupos').where('memberNames', 'array-contains', ME);
+  unsub = q.onSnapshot(function(snap) {
+    GRUPOS = snap.docs.map(function(d) { return Object.assign({id: d.id}, d.data()); });
+    if (cur('sc-list'))   renderList();
+    if (cur('sc-detail')) { var g = getG(ACTIVE); if(g) renderDetail(g); }
+    if (cb) { cb(); cb = null; }
+  }, function(err) {
+    console.error('onSnapshot error:', err);
+    toast('Error de conexión', '#e74c3c');
+    if (cb) { cb(); cb = null; }
+  });
+}
+
+function saveLocal() {
+  try { localStorage.setItem('polla_grupos', JSON.stringify(GRUPOS)); } catch(e) {}
+}
+
+function getG(id) { return GRUPOS.filter(function(g){return g.id===id;})[0] || null; }
+
+function genId() { return Math.random().toString(36).slice(2,8).toUpperCase(); }
+
+async function fsCreate(data) {
+  if (!USE_FB) {
+    var id = genId();
+    data.id = id;
+    GRUPOS.push(data);
+    saveLocal();
+    return id;
+  }
+  var ref = db.collection('grupos').doc();
+  data.id = ref.id;
+  await ref.set(data);
+  return ref.id;
+}
+
+async function fsUpdate(id, data) {
+  if (!USE_FB) {
+    var idx = GRUPOS.findIndex(function(g){return g.id===id;});
+    if (idx >= 0) Object.assign(GRUPOS[idx], data);
+    saveLocal();
+    return;
+  }
+  await db.collection('grupos').doc(id).update(data);
+}
+
+async function fsGetByCode(code) {
+  if (!USE_FB) { return GRUPOS.filter(function(g){return g.code===code;})[0] || null; }
+  var snap = await db.collection('grupos').where('code','==',code).get();
+  return snap.empty ? null : Object.assign({id: snap.docs[0].id}, snap.docs[0].data());
+}
+
+// ═══════════════════════════════════════════════════════
+// PIN
+// ═══════════════════════════════════════════════════════
+function showPin(title, sub, gid, cb) {
+  PIN_VAL = ''; PIN_CB = cb; PIN_GID = gid;
+  document.getElementById('pin-title').textContent = title;
+  document.getElementById('pin-sub').textContent   = sub;
+  document.getElementById('pin-err').textContent   = '';
+  updateDots();
+  document.getElementById('pin-modal').style.display = 'flex';
+}
+
+function pk(k) {
+  if (k === 'x')   { document.getElementById('pin-modal').style.display='none'; PIN_VAL=''; return; }
+  if (k === 'del') { PIN_VAL = PIN_VAL.slice(0,-1); updateDots(); return; }
+  if (PIN_VAL.length >= 4) return;
+  PIN_VAL += k;
+  updateDots();
+  if (PIN_VAL.length === 4) checkPin();
+}
+
+function updateDots() {
+  for (var i=0; i<4; i++) {
+    var d = document.getElementById('pd'+i);
+    if (d) d.className = 'pdot' + (i < PIN_VAL.length ? ' on' : '');
+  }
+}
+
+function checkPin() {
+  var g = getG(PIN_GID);
+  var correct = (g && g.adminPin) ? g.adminPin : '2026';
+  setTimeout(function() {
+    if (PIN_VAL === correct) {
+      document.getElementById('pin-modal').style.display = 'none';
+      PIN_VAL = '';
+      if (PIN_CB) PIN_CB();
+    } else {
+      document.getElementById('pin-err').textContent = '❌ PIN incorrecto';
+      PIN_VAL = ''; updateDots();
+    }
+  }, 200);
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVEGACIÓN
+// ═══════════════════════════════════════════════════════
+function goScreen(name) {
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('act');});
+  var sc = document.getElementById('sc-'+name);
+  if (sc) sc.classList.add('act');
+  var g = ACTIVE ? getG(ACTIVE) : null;
+  var titles = {login:['👥 Grupos','Polla FIFA 2026'], list:['👥 Grupos',ME||''], create:['Crear grupo',''], detail:[g?g.name:'Grupo', g?'Código: '+g.code:'']};
+  var t = titles[name] || ['',''];
+  setText('hdr-title', t[0]); setText('hdr-sub', t[1]);
+  document.getElementById('btn-cambiar').style.display = name==='login' ? 'none' : 'block';
+  if (name==='create') renderCreate();
+  if (name==='list')   renderList();
+  if (name==='detail' && g) renderDetail(g);
+}
+
+function dtab(id, btn) {
+  document.querySelectorAll('.tnav button').forEach(function(b){b.classList.remove('act');});
+  document.querySelectorAll('.tpanel').forEach(function(p){p.classList.remove('act');});
+  btn.classList.add('act');
+  var panel = document.getElementById('dp-'+id);
+  if (panel) panel.classList.add('act');
+}
+
+function cur(id) { var e=document.getElementById(id); return e&&e.classList.contains('act'); }
+
+// ═══════════════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════════════
+function filterLogin(q) {
+  var filtered = PARTS.filter(function(p){return p.toLowerCase().includes(q.toLowerCase());});
+  document.getElementById('login-list').innerHTML = filtered.map(function(p) {
+    return '<div onclick="selectUser(\''+esc(p)+'\')" style="padding:9px 12px;border-radius:8px;cursor:pointer;font-size:.85rem;margin-bottom:4px;background:#132840;border:1px solid #1e3a55;display:flex;justify-content:space-between">'
+      +'<span>'+p+'</span><span style="color:#6a8faa;font-size:.72rem">'+(PTS[p]||0)+' pts</span></div>';
+  }).join('');
+}
+
+function selectUser(name) {
+  ME = name;
+  try { localStorage.setItem('polla_user', name); } catch(e) {}
+  loadGroups(function() { goScreen('list'); });
+}
+
+function logout() {
+  ME = null; GRUPOS = [];
+  if (unsub) unsub();
+  try { localStorage.removeItem('polla_user'); } catch(e) {}
+  goScreen('login'); filterLogin('');
+}
+
+// ═══════════════════════════════════════════════════════
+// LISTA DE GRUPOS
+// ═══════════════════════════════════════════════════════
+function renderList() {
+  var el = document.getElementById('my-groups');
+  if (!GRUPOS.length) { el.innerHTML='<div class="empty">Sin grupos aún. ¡Crea uno o únete con un código!</div>'; return; }
+  el.innerHTML = GRUPOS.map(function(g) {
+    var isAdmin = (g.members||[]).some(function(m){return m.name===ME&&m.role==='admin';});
+    var ranked  = (g.members||[]).slice().sort(function(a,b){return (PTS[b.name]||0)-(PTS[a.name]||0);});
+    var myRank  = ranked.findIndex(function(m){return m.name===ME;})+1;
+    return '<div class="gcard" onclick="openGroup(\''+esc(g.id)+'\')">'
+      +'<div class="gch"><div><span style="font-weight:700;font-size:.95rem">'+g.name+'</span>'
+      +(isAdmin?'<span class="badgeg" style="margin-left:8px">Admin</span>':'')
+      +'</div><span class="ctag">'+g.code+'</span></div>'
+      +'<div class="gstats">'
+      +'<div><div class="gsv">#'+myRank+'</div><div class="gsl">Tu pos.</div></div>'
+      +'<div><div class="gsv">'+(PTS[ME]||0)+'</div><div class="gsl">Tus pts</div></div>'
+      +'<div><div class="gsv">'+(g.members||[]).length+'</div><div class="gsl">Miembros</div></div>'
+      +((g.sideBets||[]).length?'<div><div class="gsv" style="color:#4cde7a">'+(g.sideBets||[]).length+'</div><div class="gsl">Apuestas</div></div>':'')
+      +'</div></div>';
+  }).join('');
+}
+
+async function joinByCode() {
+  var code = document.getElementById('join-code').value.trim().toUpperCase();
+  var err  = document.getElementById('join-err');
+  err.style.display = 'none';
+  if (!code) return;
+  try {
+    var g = await fsGetByCode(code);
+    if (!g) { showErr(err,'❌ Código no encontrado'); return; }
+    if ((g.memberNames||[]).indexOf(ME) >= 0) { showErr(err,'Ya eres miembro'); return; }
+    var mem = {name:ME, role:'member', joinedAt:new Date().toISOString()};
+    if (USE_FB) {
+      await db.collection('grupos').doc(g.id).update({
+        members:     firebase.firestore.FieldValue.arrayUnion(mem),
+        memberNames: firebase.firestore.FieldValue.arrayUnion(ME)
+      });
+    } else {
+      g.members = (g.members||[]).concat([mem]);
+      g.memberNames = (g.memberNames||[]).concat([ME]);
+      var existing = GRUPOS.findIndex(function(x){return x.id===g.id;});
+      if (existing>=0) GRUPOS[existing]=g; else GRUPOS.push(g);
+      saveLocal(); renderList();
+    }
+    document.getElementById('join-code').value='';
+    toast('✅ Te uniste a "'+g.name+'"');
+  } catch(e) { showErr(err,'❌ '+e.message); }
+}
+
+function openGroup(id) { ACTIVE=id; goScreen('detail'); }
+
+// ═══════════════════════════════════════════════════════
+// CREAR GRUPO
+// ═══════════════════════════════════════════════════════
+function renderCreate() {
+  SEL_MEM=[ME]; SEL_BETS=[];
+  document.getElementById('new-name').value='';
+  document.getElementById('new-pin').value='';
+  document.getElementById('create-err').style.display='none';
+  document.getElementById('bets-create').innerHTML = BETS.map(function(b) {
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1e3a55">'
+      +'<div class="chk" id="bchk-'+b.id+'" onclick="toggleBet(\''+esc(b.id)+'\')"></div>'
+      +'<span style="font-size:.82rem">'+b.lbl+'</span></div>';
+  }).join('');
+  renderMemSel('');
+}
+
+function filterMem(q) { renderMemSel(q); }
+
+function renderMemSel(q) {
+  document.getElementById('mem-cnt').textContent = SEL_MEM.length+' seleccionados';
+  var others = PARTS.filter(function(p){return p!==ME&&p.toLowerCase().includes(q.toLowerCase());});
+  document.getElementById('mem-list').innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1e3a55">'
+    +'<div class="chk on">✓</div><span style="font-size:.82rem">'+ME+'</span>'
+    +'<span class="badgeg" style="margin-left:auto">Tú · Admin</span></div>'
+    +others.map(function(p) {
+      var on = SEL_MEM.indexOf(p)>=0;
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1e3a55">'
+        +'<div class="chk'+(on?' on':'')+'" onclick="toggleMem(\''+esc(p)+'\')">'+( on?'✓':'')+'</div>'
+        +'<span style="font-size:.82rem">'+p+'</span>'
+        +'<span style="color:#6a8faa;font-size:.7rem;margin-left:auto">'+(PTS[p]||0)+' pts</span></div>';
+    }).join('');
+}
+
+function toggleMem(name) {
+  var idx=SEL_MEM.indexOf(name);
+  if(idx>=0) SEL_MEM.splice(idx,1); else SEL_MEM.push(name);
+  renderMemSel(document.getElementById('mem-q').value);
+}
+
+function toggleBet(id) {
+  var idx=SEL_BETS.indexOf(id);
+  if(idx>=0) SEL_BETS.splice(idx,1); else SEL_BETS.push(id);
+  var el=document.getElementById('bchk-'+id);
+  if(el){el.className='chk'+(SEL_BETS.indexOf(id)>=0?' on':'');el.textContent=SEL_BETS.indexOf(id)>=0?'✓':'';}
+}
+
+async function createGroup() {
+  var name = document.getElementById('new-name').value.trim();
+  var pin  = document.getElementById('new-pin').value.trim();
+  var err  = document.getElementById('create-err');
+  if(!name){showErr(err,'❌ Ponle un nombre al grupo');return;}
+  if(!pin||pin.length!==4){showErr(err,'❌ Ingresa un PIN de 4 dígitos');return;}
+  if(SEL_MEM.length<2){showErr(err,'❌ Agrega al menos un participante');return;}
+  var btn=document.getElementById('create-btn'); btn.disabled=true; btn.style.opacity='.5';
+  try {
+    var data={
+      code:genId().slice(0,6), name:name, adminPin:pin, createdBy:ME,
+      members:SEL_MEM.map(function(n){return {name:n,role:n===ME?'admin':'member',joinedAt:new Date().toISOString()};}),
+      memberNames:SEL_MEM.slice(),
+      sideBets:SEL_BETS.slice(), memberBets:{}, betResults:{}
+    };
+    var newId = await fsCreate(data);
+    ACTIVE=newId; toast('✅ Grupo "'+name+'" creado');
+    if(!USE_FB){renderList();}
+    setTimeout(function(){ goScreen('detail'); }, USE_FB?700:100);
+  } catch(e){showErr(err,'❌ '+e.message);}
+  finally{btn.disabled=false; btn.style.opacity='1';}
+}
+
+// ═══════════════════════════════════════════════════════
+// DETALLE DEL GRUPO
+// ═══════════════════════════════════════════════════════
+function renderDetail(g) {
+  setText('hdr-title',g.name); setText('hdr-sub','Código: '+g.code);
+  var isAdmin=(g.members||[]).some(function(m){return m.name===ME&&m.role==='admin';});
+  document.getElementById('btn-apuestas').style.display=(g.sideBets||[]).length?'block':'none';
+  renderRank(g); renderMembers(g,isAdmin);
+  if((g.sideBets||[]).length) renderBets(g,isAdmin);
+}
+
+function renderRank(g) {
+  var ranked=(g.members||[]).slice().sort(function(a,b){return (PTS[b.name]||0)-(PTS[a.name]||0);});
+  var med=['🥇','🥈','🥉'];
+  document.getElementById('grp-rank').innerHTML='<table class="rtable"><thead><tr>'
+    +'<th style="text-align:center;width:36px">#</th><th>Participante</th><th style="text-align:right;padding-right:12px">Pts</th>'
+    +'</tr></thead><tbody>'
+    +ranked.map(function(m,i){
+      return '<tr class="'+(m.name===ME?'merow':'')+'">'
+        +'<td style="text-align:center;color:#8ab4d4;font-size:.75rem">'+(med[i]||i+1)+'</td>'
+        +'<td style="padding-left:12px">'+m.name+(m.name===ME?' <span style="color:#6a8faa;font-size:.7rem">(tú)</span>':'')+(m.role==='admin'?' <span style="color:#f5d020;font-size:.65rem">★</span>':'')+'</td>'
+        +'<td style="text-align:right;padding-right:12px;color:#f5d020;font-weight:700">'+(PTS[m.name]||0)+'</td></tr>';
+    }).join('')+'</tbody></table>';
+}
+
+function renderMembers(g, isAdmin) {
+  document.getElementById('add-mem-sec').innerHTML = isAdmin
+    ? '<button class="btn bg bfull" style="margin-bottom:12px" onclick="toggleAddForm(\''+esc(g.id)+'\')">➕ Agregar participante</button>'
+      +'<div id="add-form" style="display:none;margin-bottom:12px"><div class="card"><div class="cb">'
+      +'<input type="text" id="add-q" placeholder="🔍 Buscar..." oninput="renderAddList(\''+esc(g.id)+'\',this.value)" style="margin-bottom:8px">'
+      +'<div id="add-list" style="max-height:200px;overflow-y:auto"></div></div></div></div>'
+    : '';
+
+  document.getElementById('mem-detail').innerHTML=(g.members||[]).map(function(m){
+    return '<div class="mrow"><div>'
+      +'<div style="font-size:.88rem;font-weight:600">'+m.name+(m.name===ME?' <span style="color:#6a8faa;font-size:.7rem">(tú)</span>':'')+'</div>'
+      +'<div style="font-size:.7rem;color:#6a8faa;margin-top:2px">'+(m.role==='admin'?'★ Administrador':'Participante')
+      +' · '+new Date(m.joinedAt).toLocaleDateString('es-CO')+'</div></div>'
+      +'<div style="display:flex;gap:6px">'
+      +(isAdmin&&m.name!==ME&&m.role!=='admin'?'<button class="btn bgh bsm" onclick="promoteMem(\''+esc(g.id)+'\',\''+esc(m.name)+'\')">★ Admin</button>':'')
+      +(isAdmin&&m.name!==ME?'<button class="btn bred bsm" onclick="removeMem(\''+esc(g.id)+'\',\''+esc(m.name)+'\')">✕</button>':'')
+      +'</div></div>';
+  }).join('');
+
+  document.getElementById('leave-sec').innerHTML=!isAdmin
+    ?'<button class="btn bred bfull" onclick="leaveGroup(\''+esc(g.id)+'\')">Salir del grupo</button>':'';
+}
+
+function toggleAddForm(gid) {
+  var f=document.getElementById('add-form');
+  f.style.display=f.style.display==='none'?'block':'none';
+  if(f.style.display==='block') renderAddList(gid,'');
+}
+
+function renderAddList(gid,q) {
+  var g=getG(gid); if(!g) return;
+  var avail=PARTS.filter(function(p){return (g.memberNames||[]).indexOf(p)<0&&p.toLowerCase().includes(q.toLowerCase());});
+  document.getElementById('add-list').innerHTML=avail.length===0
+    ?'<div class="empty" style="padding:8px 0">Sin más participantes</div>'
+    :avail.map(function(p){return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1e3a55"><span style="font-size:.82rem">'+p+'</span><button class="btn bgr bsm" onclick="addMem(\''+esc(gid)+'\',\''+esc(p)+'\')">Agregar</button></div>';}).join('');
+}
+
+async function addMem(gid,name) {
+  var g=getG(gid); if(!g) return;
+  var mem={name:name,role:'member',joinedAt:new Date().toISOString()};
+  if(USE_FB){
+    await db.collection('grupos').doc(gid).update({
+      members:firebase.firestore.FieldValue.arrayUnion(mem),
+      memberNames:firebase.firestore.FieldValue.arrayUnion(name)
+    });
+  } else {
+    g.members=(g.members||[]).concat([mem]);
+    g.memberNames=(g.memberNames||[]).concat([name]);
+    saveLocal(); renderDetail(g);
+  }
+  toast('✅ '+name+' agregado');
+}
+
+async function removeMem(gid,name) {
+  if(!confirm('¿Eliminar a '+name+'?')) return;
+  showPin('🔐 Confirmar eliminación','PIN del grupo requerido',gid,async function(){
+    var g=getG(gid); if(!g) return;
+    var mem=g.members.filter(function(m){return m.name===name;})[0];
+    if(!mem) return;
+    if(USE_FB){
+      await db.collection('grupos').doc(gid).update({
+        members:firebase.firestore.FieldValue.arrayRemove(mem),
+        memberNames:firebase.firestore.FieldValue.arrayRemove(name)
+      });
+    } else {
+      g.members=g.members.filter(function(m){return m.name!==name;});
+      g.memberNames=(g.memberNames||[]).filter(function(n){return n!==name;});
+      saveLocal(); renderDetail(g);
+    }
+    toast('✅ '+name+' eliminado');
+  });
+}
+
+async function promoteMem(gid,name) {
+  showPin('🔐 Confirmar acción','PIN para promover a admin',gid,async function(){
+    var g=getG(gid); if(!g) return;
+    var old=g.members.filter(function(m){return m.name===name;})[0]; if(!old) return;
+    var upd=Object.assign({},old,{role:'admin'});
+    if(USE_FB){
+      await db.collection('grupos').doc(gid).update({members:firebase.firestore.FieldValue.arrayRemove(old)});
+      await db.collection('grupos').doc(gid).update({members:firebase.firestore.FieldValue.arrayUnion(upd)});
+    } else {
+      g.members=g.members.map(function(m){return m.name===name?upd:m;}); saveLocal(); renderDetail(g);
+    }
+    toast('✅ '+name+' es admin');
+  });
+}
+
+async function leaveGroup(gid) {
+  if(!confirm('¿Seguro que quieres salir?')) return;
+  var g=getG(gid); if(!g) return;
+  var me=g.members.filter(function(m){return m.name===ME;})[0]; if(!me) return;
+  if(USE_FB){
+    await db.collection('grupos').doc(gid).update({
+      members:firebase.firestore.FieldValue.arrayRemove(me),
+      memberNames:firebase.firestore.FieldValue.arrayRemove(ME)
+    });
+  } else {
+    g.members=g.members.filter(function(m){return m.name!==ME;});
+    g.memberNames=(g.memberNames||[]).filter(function(n){return n!==ME;});
+    GRUPOS=GRUPOS.filter(function(x){return x.id!==gid;}); saveLocal();
+  }
+  ACTIVE=null; goScreen('list'); toast('Saliste del grupo');
+}
+
+// ═══════════════════════════════════════════════════════
+// APUESTAS
+// ═══════════════════════════════════════════════════════
+function renderBets(g, isAdmin) {
+  var br=g.betResults||{}, mb=g.memberBets||{}, my=mb[ME]||{};
+  document.getElementById('bets-detail').innerHTML=(g.sideBets||[]).map(function(bid){
+    var bet=BETS.filter(function(b){return b.id===bid;})[0]; if(!bet) return '';
+    var winner=br[bid];
+    var preds=Object.keys(mb).map(function(n){return {name:n,pred:mb[n][bid]};}).filter(function(p){return !!p.pred;});
+    var counts={}; preds.forEach(function(p){counts[p.pred]=(counts[p.pred]||0)+1;});
+    var sorted=Object.keys(counts).map(function(k){return [k,counts[k]];}).sort(function(a,b){return b[1]-a[1];});
+    var total=preds.length||1;
+    var bars=sorted.map(function(pair){
+      var pred=pair[0],cnt=pair[1],w=Math.round(100*cnt/total),isWin=winner===pred;
+      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+        +'<span style="min-width:110px;font-size:.8rem;color:'+(isWin?'#4cde7a':'#fff')+';font-weight:'+(isWin?700:400)+'">'+pred+(isWin?' ✅':'')+'</span>'
+        +'<div style="flex:1;height:7px;background:#1e3a55;border-radius:3px;overflow:hidden"><div style="height:100%;width:'+w+'%;background:'+(isWin?'#4cde7a':'#c8a200')+';border-radius:3px"></div></div>'
+        +'<span style="color:#f5d020;font-size:.75rem;min-width:20px">'+cnt+'</span></div>';
+    }).join('');
+    var setBtn=isAdmin&&!winner&&sorted.length
+      ?'<div style="margin-top:8px;border-top:1px solid #1e3a55;padding-top:8px"><div style="font-size:.7rem;color:#6a8faa;margin-bottom:5px">Definir ganador:</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+sorted.map(function(pair){return '<button class="btn bgh bsm" onclick="setWinner(\''+esc(g.id)+'\',\''+esc(bid)+'\',\''+esc(pair[0])+'\')">'+pair[0]+'</button>';}).join('')+'</div></div>':'';
+    return '<div class="card" style="margin-bottom:10px">'
+      +'<div class="ch" style="display:flex;justify-content:space-between;align-items:center">'
+      +'<span style="color:#f5d020;font-weight:700;font-size:.82rem">'+bet.lbl+'</span>'
+      +(winner?'<span class="badgegr">✅ '+winner+'</span>':'<span class="badgeb">'+preds.length+'/'+g.members.length+'</span>')
+      +'</div><div class="cb">'+(preds.length===0?'<div class="empty" style="padding:8px 0">Sin apuestas aún</div>':bars)+setBtn+'</div></div>';
+  }).join('');
+
+  document.getElementById('my-bets').innerHTML='<div class="card" style="margin-top:4px">'
+    +'<div class="ch"><span style="color:#f5d020;font-weight:700;font-size:.82rem">✏️ Mis apuestas</span></div><div class="cb">'
+    +(g.sideBets||[]).map(function(bid){
+      var bet=BETS.filter(function(b){return b.id===bid;})[0]; if(!bet) return '';
+      return '<div style="margin-bottom:12px"><div style="font-size:.7rem;color:#8ab4d4;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">'+bet.lbl+'</div>'
+        +'<input type="text" id="mb-'+bid+'" value="'+(my[bid]||'')+'" placeholder="'+(bet.t==='team'?'Nombre del equipo...':'Nombre del jugador...')+'"></div>';
+    }).join('')
+    +'<div id="bet-ok" style="display:none;color:#4cde7a;font-size:.75rem;margin-bottom:6px">✅ Guardado</div>'
+    +'<button class="btn bg bfull" onclick="saveBets(\''+esc(g.id)+'\')">Guardar mis apuestas</button>'
+    +'</div></div>';
+}
+
+async function setWinner(gid,bid,pred) {
+  showPin('🔐 Definir ganador','PIN del grupo requerido',gid,async function(){
+    if(USE_FB){
+      var up={}; up['betResults.'+bid]=pred;
+      await db.collection('grupos').doc(gid).update(up);
+    } else {
+      var g=getG(gid); if(!g) return;
+      g.betResults=g.betResults||{}; g.betResults[bid]=pred; saveLocal(); renderDetail(g);
+    }
+    toast('✅ Ganador: '+pred);
+  });
+}
+
+async function saveBets(gid) {
+  var g=getG(gid); if(!g) return;
+  var bets={};
+  (g.sideBets||[]).forEach(function(bid){
+    var el=document.getElementById('mb-'+bid);
+    if(el&&el.value.trim()) bets[bid]=el.value.trim();
+  });
+  var safeKey=ME.replace(/\./g,'_').replace(/ /g,'_');
+  if(USE_FB){
+    var up={}; up['memberBets.'+safeKey]=bets;
+    await db.collection('grupos').doc(gid).update(up);
+  } else {
+    g.memberBets=g.memberBets||{}; g.memberBets[ME]=bets; saveLocal(); renderDetail(g);
+  }
+  var ok=document.getElementById('bet-ok');
+  if(ok){ok.style.display='block';setTimeout(function(){ok.style.display='none';},2000);}
+  toast('✅ Apuestas guardadas');
+}
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function esc(s){return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');}
+function setText(id,t){var e=document.getElementById(id);if(e)e.textContent=t;}
+function showErr(el,m){el.textContent=m;el.style.display='block';}
+function toast(msg,bg){
+  bg=bg||'#4cde7a';
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=bg;t.style.color=bg==='#4cde7a'?'#000':'#fff';
+  t.style.opacity='1';clearTimeout(t._t);
+  t._t=setTimeout(function(){t.style.opacity='0';},2500);
+}
+
+// ═══════════════════════════════════════════════════════
+// ARRANQUE — esperar a que DOM y scripts estén listos
+// ═══════════════════════════════════════════════════════
+// Arranque robusto: usa DOMContentLoaded primero, window.load como respaldo
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() { init(); });
+} else {
+  // DOM ya está listo
+  init();
+}
+</script>
+</body>
+</html>
