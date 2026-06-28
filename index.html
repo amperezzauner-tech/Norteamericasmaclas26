@@ -651,8 +651,9 @@ function calculate(){
     });
     const groupBonus=groupPositionBonus(p);
     const r32Bonus=r32ExactMatchupBonus(p);
-    pts+=groupBonus.total+r32Bonus.total;
-    return {...p,pts,exact:ex,hit,pct:PLAYED.length?pct(hit,PLAYED.length):0,last:last.reverse(),surpriseScore,surpriseHits,groupPosPts:groupBonus.total,groupPosHits:groupBonus.hits,groupPosClosed:groupBonus.closed,groupPosDetail:groupBonus.detail,r32MatchPts:r32Bonus.total,r32MatchHits:r32Bonus.hits,r32MatchAvailable:r32Bonus.available,r32MatchDetail:r32Bonus.detail}
+    const r16Bonus=r16ExactMatchupBonus(p);
+    pts+=groupBonus.total+r32Bonus.total+r16Bonus.total;
+    return {...p,pts,exact:ex,hit,pct:PLAYED.length?pct(hit,PLAYED.length):0,last:last.reverse(),surpriseScore,surpriseHits,groupPosPts:groupBonus.total,groupPosHits:groupBonus.hits,groupPosClosed:groupBonus.closed,groupPosDetail:groupBonus.detail,r32MatchPts:r32Bonus.total,r32MatchHits:r32Bonus.hits,r32MatchAvailable:r32Bonus.available,r32MatchDetail:r32Bonus.detail,r16MatchPts:r16Bonus.total,r16MatchHits:r16Bonus.hits,r16MatchAvailable:r16Bonus.available,r16MatchDetail:r16Bonus.detail}
   });
   computeRarity();
   RANKING.sort((a,b)=>b.pts-a.pts||b.exact-a.exact||b.hit-a.hit||b.groupPosPts-a.groupPosPts||a.nombre.localeCompare(b.nombre));
@@ -723,6 +724,17 @@ const KO_PHASES={
   'Final':{ids:['p103','p104'],total:2,label:'Tercer puesto y final'}
 };
 const R32_EXACT_MATCHUP_BONUS=2;
+const R16_EXACT_MATCHUP_BONUS=2;
+const R16_SLOTS=[
+  {id:'R16-1',r32a:'p073',r32b:'p074',r16:'p089'},
+  {id:'R16-2',r32a:'p075',r32b:'p076',r16:'p090'},
+  {id:'R16-3',r32a:'p077',r32b:'p078',r16:'p091'},
+  {id:'R16-4',r32a:'p079',r32b:'p080',r16:'p092'},
+  {id:'R16-5',r32a:'p081',r32b:'p082',r16:'p093'},
+  {id:'R16-6',r32a:'p083',r32b:'p084',r16:'p094'},
+  {id:'R16-7',r32a:'p085',r32b:'p086',r16:'p095'},
+  {id:'R16-8',r32a:'p087',r32b:'p088',r16:'p096'},
+];
 const R32_SLOTS=[
   {id:'R32-1',a:{group:'A',pos:2},b:{group:'B',pos:2}},
   {id:'R32-2',a:{group:'C',pos:1},b:{group:'F',pos:2}},
@@ -794,6 +806,32 @@ function r32ExactMatchupBonus(p){
     }
   });
   return {total,hits:detail.length,available:real.length,detail};
+}
+function predictedR32Winner(p,matchId){
+  const m=MATCHES.find(x=>x.id===matchId);if(!m)return null;
+  const pr=p.predicciones?.[matchId];if(!pr||pr.golesLocal===undefined)return null;
+  const gl=+pr.golesLocal,gv=+pr.golesVisitante;
+  if(gl===gv)return null;
+  return gl>gv?m.local:m.visitante;
+}
+function r16ExactMatchupBonus(p){
+  const detail=[];let total=0;let available=0;
+  R16_SLOTS.forEach(slot=>{
+    const realMatch=MATCHES.find(m=>m.id===slot.r16);
+    if(!realMatch||!realMatch.local||!realMatch.visitante)return;
+    available++;
+    const realA=realMatch.local,realB=realMatch.visitante;
+    const predA=predictedR32Winner(p,slot.r32a);
+    const predB=predictedR32Winner(p,slot.r32b);
+    if(!predA||!predB)return;
+    const realKey=pairKey(realA,realB);
+    const predKey=pairKey(predA,predB);
+    if(realKey===predKey){
+      total+=R16_EXACT_MATCHUP_BONUS;
+      detail.push({r16:slot.r16,a:predA,b:predB,pts:R16_EXACT_MATCHUP_BONUS});
+    }
+  });
+  return {total,hits:detail.length,available,detail};
 }
 function knockoutMatches(){return MATCHES.filter(m=>/^p(0?7[3-9]|0?8[0-9]|0?9[0-9]|10[0-4])$/.test(m.id))}
 function phaseMatches(phase){
