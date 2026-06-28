@@ -199,6 +199,7 @@ body:before{
     </div>
   </section>
 
+  <div id="diag-banner" style="display:none;background:#1a0a3d;border:1px solid #ffd447;border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:.74rem;color:#fffaf0"></div>
   <div class="rbar" id="rbar"><b>Resultados:</b> cargando...</div>
 
   <nav class="tabs">
@@ -382,6 +383,16 @@ body:before{
 <div class="profile" id="profile"><div class="sheet"><button class="close" onclick="closeProfile()">×</button><div class="prof-name" id="prof-name">Perfil</div><div id="prof-card"></div><div style="height:12px"></div><div class="prof-grid" id="prof-grid"></div><div style="height:12px"></div><div class="card"><div class="section-title">Últimos partidos evaluados</div><div class="body" id="prof-matches"></div></div></div></div>
 
 <script>
+// ── Diagnóstico global de errores JS ──────────────────────────────
+window.addEventListener('error', function(e){
+  console.error('[Mundial 2026]', e.message, e.filename, e.lineno);
+  const daily = document.getElementById('daily-card');
+  if(daily && !daily.innerHTML.includes('Error JS')) {
+    const prev = daily.innerHTML;
+    daily.innerHTML = prev + '<div style="margin-top:8px;padding:6px 10px;background:#ef3e3622;border:1px solid #ef3e36;border-radius:8px;font-size:.68rem;color:#ef3e36">⚠️ Error JS: '+String(e.message).replace(/[<>]/g,'')+'</div>';
+  }
+});
+
 let PRED,RES,PARTICIPANTES=[],MATCHES=[],PLAYED=[],PENDING=[],RANKING=[],GROUP='A',CHAMPIONS=[],RARE_EVENTS=[],SURPRISE=null;
 
 // Calendario interno para ordenar "en vivo" y "próximos".
@@ -520,10 +531,35 @@ function sanitizeMatches(matches){
 }
 
 async function loadData(){
+  function showLoadError(msg,detail){
+    const sub=document.getElementById('subtitle');
+    const daily=document.getElementById('daily-card');
+    if(sub)sub.textContent='Error al cargar datos';
+    const isFile=location.protocol==='file:';
+    const hintFile=[
+      '<div style="margin-top:10px;padding:10px;background:#ffd44722;',
+      'border:1px solid #ffd447;border-radius:10px;font-size:.8rem">',
+      '<b>Abriste index.html en file:// &mdash; los fetch() no funcionan aqui</b><br><br>',
+      '<b>Soluciones:</b><br>',
+      '① <b>GitHub Pages</b> (ya configurado): sube y usa tu URL https://...<br>',
+      '② <b>Python local:</b> abre terminal en la carpeta y corre:<br>',
+      '&nbsp;&nbsp;<code>python3 -m http.server 8000</code><br>',
+      '&nbsp;&nbsp;luego abre <b>http://localhost:8000</b><br>',
+      '③ <b>VS Code:</b> extensión Live Server → clic derecho → Open with Live Server',
+      '</div>'
+    ].join('');
+    const hintServer='<div style="margin-top:8px;font-size:.75rem;color:var(--muted)">Detalle: '+esc(String(detail||msg))+'<br>Verifica que los JSON estén junto a index.html.</div>';
+    if(daily)daily.innerHTML='<div class="empty">'+esc(String(msg))+'</div>'+(isFile?hintFile:hintServer);
+    ['ranking-list','ko-16-content','ko-8-content','ko-4-content','ko-2-content','ko-final-content','ko-resumen-content'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el&&!el.innerHTML.trim())el.innerHTML='<div class="empty">Esperando datos...</div>';
+    });
+  }
+
   try{
     const [p,r]=await Promise.all([
-      fetch('predicciones.json?ts='+Date.now(), {cache:'no-store'}).then(x=>{if(!x.ok)throw new Error('No cargó predicciones.json');return x.json()}),
-      fetch('resultados.json?ts='+Date.now(), {cache:'no-store'}).then(x=>{if(!x.ok)throw new Error('No cargó resultados.json');return x.json()})
+      fetch('predicciones.json?ts='+Date.now(),{cache:'no-store'}).then(x=>{if(!x.ok)throw new Error('predicciones.json HTTP '+x.status);return x.json()}),
+      fetch('resultados.json?ts='+Date.now(),{cache:'no-store'}).then(x=>{if(!x.ok)throw new Error('resultados.json HTTP '+x.status);return x.json()})
     ]);
     PRED=p;RES=r;
     PARTICIPANTES=(p.participantes||[]).filter(x=>x.id!=='alejandro_gonzalex'&&x.nombre!=='Alejandro Gonzalex');
@@ -531,9 +567,10 @@ async function loadData(){
     PLAYED=MATCHES.filter(isScoreable).sort((a,b)=>matchTime(a)-matchTime(b));
     PENDING=MATCHES.filter(m=>!isScoreable(m)).sort((a,b)=>matchTime(a)-matchTime(b));
     calculate();renderAll();
+    window._dataLoaded=true;
+    if(typeof window._bracketReady==='function')window._bracketReady();
   }catch(e){
-    document.getElementById('subtitle').textContent='No pude cargar predicciones.json/resultados.json';
-    document.getElementById('daily-card').innerHTML='<div class="empty">No cargaron los datos. Revisa que index.html, predicciones.json y resultados.json estén en la misma carpeta. Detalle: '+esc(e.message)+'</div>';
+    showLoadError('No pude cargar los JSON de datos',e.message);
   }
 }
 
@@ -806,7 +843,7 @@ function actualQualifiers(){
     // Mientras no hayan cerrado todos los grupos, se evalúan solo los dos primeros de los grupos cerrados.
     // Los mejores terceros se activan cuando cierren los 12 grupos para evitar falsos positivos.
   }
-  return {teams:qualified,closed,total:groupLetters().length};
+  qualified.teams = qualified; qualified.closed = closed; qualified.total = groupLetters().length; return qualified;
 }
 function qualifierRanking(){
   // Esta tabla NO suma simplemente equipos clasificados.
@@ -895,12 +932,14 @@ function renderKOResumen(){
 }
 function renderEliminatorias(){
   if(!document.getElementById('ko-16-content'))return;
-  renderQualifierModule();
-  renderKORank('8vos','ko-8-content');
-  renderKORank('Cuartos','ko-4-content');
-  renderKORank('Semis','ko-2-content');
-  renderKORank('Final','ko-final-content');
-  renderKOResumen();
+  try{
+    renderQualifierModule();
+    renderKORank('8vos','ko-8-content');
+    renderKORank('Cuartos','ko-4-content');
+    renderKORank('Semis','ko-2-content');
+    renderKORank('Final','ko-final-content');
+    renderKOResumen();
+  }catch(e){console.error('[eliminatorias]',e);}
 }
 
 function currentPhaseLabel(finalCount,total){
@@ -1021,7 +1060,14 @@ function renderAll(){
   document.getElementById('stat-exact').textContent=exactTop;
   document.getElementById('stat-champ').textContent=fav.team;
   const liveMatches=currentLiveMatches();document.getElementById('live-pill').textContent=liveMatches.length>1?'🔴 '+liveMatches.length+' EN VIVO':(liveMatches.length===1?'🔴 '+liveMatches[0].local+' vs '+liveMatches[0].visitante:'🏆 ELIMINATORIAS');document.getElementById('rbar').innerHTML='<b>Resultados:</b> '+(PLAYED.length?PLAYED.slice(-18).map(m=>esc(m.local.substring(0,3))+'-'+esc(m.visitante.substring(0,3))+' '+m.golesLocal+'-'+m.golesVisitante).join(' · '):'sin partidos finalizados');
-  renderDashboard();renderActivityFeed();renderRankingChart();renderFifaCards();renderWorldMap();renderDaily();renderQuickAwards();renderSurprise();renderCollective();renderChampionCards();renderBotinBalon();renderKOPredictions();renderGroupButtons();renderGroupPredictions();renderTopMeter();renderRanking();renderMatches();renderMatchPredictionTable();renderEliminatorias();renderBadges();renderRarest();
+  [
+    renderDashboard, renderActivityFeed, renderRankingChart, renderFifaCards,
+    renderWorldMap, renderDaily, renderQuickAwards, renderSurprise,
+    renderCollective, renderChampionCards, renderBotinBalon, renderKOPredictions,
+    renderGroupButtons, renderGroupPredictions, renderTopMeter,
+    renderRanking, renderMatches, renderMatchPredictionTable,
+    renderEliminatorias, renderBadges, renderRarest
+  ].forEach(fn=>{ try{ if(typeof fn==='function') fn(); } catch(e){ console.error('[renderAll]',fn?.name,e); } });
 }
 function renderDaily(){
   let best=null;
@@ -1199,11 +1245,12 @@ function championBars(arr, full=false){
 }
 function renderGroupButtons(){
   const groups=[...new Set(MATCHES.map(m=>m.grupo).filter(Boolean))].sort();
-  document.getElementById('group-buttons').innerHTML=groups.map(g=>'<button class="'+(g===GROUP?'act':'')+'" onclick="GROUP=\''+g+'\';renderGroupButtons();renderGroupPredictions()">Grupo '+g+'</button>').join('');
+  const gbEl=document.getElementById('group-buttons');if(!gbEl)return;
+  gbEl.innerHTML=groups.map(g=>'<button class="'+(g===GROUP?'act':'')+'" onclick="GROUP=\''+g+'\';renderGroupButtons();renderGroupPredictions()">Grupo '+g+'</button>').join('');
 }
 function renderGroupPredictions(){
   const ms=MATCHES.filter(m=>m.grupo===GROUP);
-  document.getElementById('group-predictions').innerHTML=ms.map(m=>{
+  const gpEl=document.getElementById('group-predictions');if(!gpEl)return;gpEl.innerHTML=ms.map(m=>{
     let local=0,emp=0,visit=0,exactReal=0,total=0;
     PARTICIPANTES.forEach(p=>{
       const pr=p.predicciones?.[m.id];if(!pr)return;total++;
@@ -1219,8 +1266,8 @@ function renderGroupPredictions(){
   }).join('')||'<div class="empty">Sin partidos para este grupo.</div>';
 }
 function predBar(label,n,total,cls){return '<div class="barrow"><div class="barhead"><span>'+esc(label)+'</span><b>'+pct(n,total)+'%</b></div><div class="bar"><div class="fill '+cls+'" style="width:'+pct(n,total)+'%"></div></div></div>'}
-function renderTopMeter(){document.getElementById('top-meter').innerHTML=RANKING.slice(0,5).map(p=>'<div class="rank-row" onclick="openProfile(\''+p.id+'\')"><div class="pos">#'+p.pos+'</div><div><div class="name">'+esc(p.nombre)+'</div><div class="chips"><span class="chip">'+p.hit+'/'+PLAYED.length+' aciertos</span><span class="chip">'+p.exact+' exactos</span><span class="chip">'+p.pct+'%</span>'+((p.groupPosPts||0)?'<span class="chip gold">📋 +'+p.groupPosPts+' pos.</span>':'')+'</div></div><div class="pts">'+p.pts+'</div></div>').join('')}
-function renderRanking(){const q=norm(document.getElementById('search')?.value||'');const arr=RANKING.filter(p=>!q||norm(p.nombre).includes(q));document.getElementById('ranking-list').innerHTML=arr.map(p=>'<div class="rank-row" onclick="openProfile(\''+p.id+'\')"><div class="pos">'+medal(p.pos)+'</div><div><div class="name">'+esc(p.nombre)+'</div><div class="chips"><span class="chip">🎯 '+p.exact+'</span><span class="chip">✅ '+p.hit+'</span><span class="chip">'+p.pct+'%</span><span class="chip violet">🔥 '+(p.surpriseHits||0)+'</span>'+((p.groupPosPts||0)?'<span class="chip gold">📋 +'+p.groupPosPts+' pos.</span>':'')+'</div></div><div class="pts">'+p.pts+'</div></div>').join('')||'<div class="empty">No encontré participantes.</div>'}
+function renderTopMeter(){const tmEl=document.getElementById('top-meter');if(!tmEl)return;tmEl.innerHTML=RANKING.slice(0,5).map(p=>'<div class="rank-row" onclick="openProfile(\''+p.id+'\')"><div class="pos">#'+p.pos+'</div><div><div class="name">'+esc(p.nombre)+'</div><div class="chips"><span class="chip">'+p.hit+'/'+PLAYED.length+' aciertos</span><span class="chip">'+p.exact+' exactos</span><span class="chip">'+p.pct+'%</span>'+((p.groupPosPts||0)?'<span class="chip gold">📋 +'+p.groupPosPts+' pos.</span>':'')+'</div></div><div class="pts">'+p.pts+'</div></div>').join('')}
+function renderRanking(){const searchEl=document.getElementById('search');const q=norm(searchEl?.value||'');const arr=RANKING.filter(p=>!q||norm(p.nombre).includes(q));document.getElementById('ranking-list').innerHTML=arr.map(p=>'<div class="rank-row" onclick="openProfile(\''+p.id+'\')"><div class="pos">'+medal(p.pos)+'</div><div><div class="name">'+esc(p.nombre)+'</div><div class="chips"><span class="chip">🎯 '+p.exact+'</span><span class="chip">✅ '+p.hit+'</span><span class="chip">'+p.pct+'%</span><span class="chip violet">🔥 '+(p.surpriseHits||0)+'</span>'+((p.groupPosPts||0)?'<span class="chip gold">📋 +'+p.groupPosPts+' pos.</span>':'')+'</div></div><div class="pts">'+p.pts+'</div></div>').join('')||'<div class="empty">No encontré participantes.</div>'}
 function matchPhaseLabel(m){
   const id=m.id;const num=parseInt((id||'').replace('p',''));
   if(num>=73&&num<=88)return'🏆 16avos de Final';
@@ -1375,15 +1422,32 @@ function showMobile(id,btn){document.querySelectorAll('.section').forEach(s=>s.c
 function syncBottom(id){const buttons=[...document.querySelectorAll('.bottom button')];buttons.forEach(b=>b.classList.remove('act'));const idx={inicio:0,ranking:1,partidos:2,bracket:3,eliminatorias:4,preds:5,salon:6}[id];if(idx!==undefined)buttons[idx].classList.add('act')}
 
 loadData();
-// Refresca automáticamente los JSON sin recargar la página.
-// Así, cuando GitHub Actions actualice resultados.json, la tabla cambia sola.
+// Auto-refresca cada 60s para capturar actualizaciones de GitHub Actions
 setInterval(()=>{
   loadData();
-  // Actualizar el bracket si está visible
-  if(document.getElementById('bracket')?.classList.contains('act')){
-    refreshBracket('bracket-section-body');
+  if(document.getElementById('bracket')?.classList.contains('act')&&window._dataLoaded){
+    if(typeof refreshBracket==='function')refreshBracket('bracket-section-body');
   }
 }, 60*1000);
+
+// ── Panel de diagnóstico ────────────────────────────────────────
+function showDiagnostic(){
+  const banner=document.getElementById('diag-banner');
+  if(!banner)return;
+  const isFile=location.protocol==='file:';
+  if(!window._dataLoaded){
+    banner.style.display='block';
+    if(isFile){
+      banner.innerHTML='<b>Protocolo file:// detectado.</b> Fetch no funciona aqui. '
+        +'Corre: <code>python3 -m http.server 8000</code> y abre http://localhost:8000';
+    } else {
+      banner.innerHTML='Cargando datos del torneo...';
+    }
+  } else {
+    banner.style.display='none';
+  }
+}
+setTimeout(showDiagnostic, 1500);
 </script>
 <!-- 🏆 Camino al Campeonato: módulo independiente -->
 <script src="bracket.js"></script>

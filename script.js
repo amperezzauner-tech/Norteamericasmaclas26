@@ -416,7 +416,7 @@ function actualQualifiers(){
     // Mientras no hayan cerrado todos los grupos, se evalúan solo los dos primeros de los grupos cerrados.
     // Los mejores terceros se activan cuando cierren los 12 grupos para evitar falsos positivos.
   }
-  return {teams:qualified,closed,total:groupLetters().length};
+  qualified.teams = qualified; qualified.closed = closed; qualified.total = groupLetters().length; return qualified;
 }
 function qualifierRanking(){
   // Esta tabla NO suma simplemente equipos clasificados.

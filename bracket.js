@@ -123,10 +123,10 @@ function brNorm(s) {
 
 /** Obtiene todos los partidos del JSON global (cargado por script.js) */
 function brGetAllMatches() {
-  // MATCHES es la variable global de script.js
-  if (typeof MATCHES !== 'undefined' && MATCHES.length) return MATCHES;
-  // Fallback: intentar leer desde RES global
-  if (typeof RES !== 'undefined' && RES?.partidos) return RES.partidos;
+  // MATCHES es la variable global de script.js (cargada por loadData en index.html)
+  if (typeof MATCHES !== 'undefined' && Array.isArray(MATCHES) && MATCHES.length) return MATCHES;
+  // Fallback: intentar leer desde RES global (si loadData ya corrió)
+  if (typeof RES !== 'undefined' && RES?.partidos && RES.partidos.length) return RES.partidos;
   return [];
 }
 
@@ -652,6 +652,7 @@ function drawLine(svg, x1, y1, x2, y2, color) {
  * Aplica animaciones de transición suaves para los ganadores que avanzan.
  * @param {HTMLElement} container
  */
+
 function updateBracket(container) {
   if (!container) return;
 
@@ -692,6 +693,7 @@ function updateBracket(container) {
  * Crea la estructura HTML base del módulo y lo inicializa.
  * @param {string} containerId — id del elemento donde se montará el bracket
  */
+
 function generateBracket(containerId) {
   const container = document.getElementById(containerId);
   if (!container) {
@@ -756,20 +758,28 @@ function refreshBracket(containerId) {
  * Si MATCHES aún no está cargado, espera a que script.js lo cargue.
  */
 (function autoInit() {
+  let _initialized = false;
+
   function tryInit() {
-    // Solo inicializar si hay datos cargados
+    if (_initialized) return;
     const allMatches = brGetAllMatches();
     if (allMatches.length === 0) {
-      // Reintentar después de que script.js cargue los datos
-      setTimeout(tryInit, 350);
+      setTimeout(tryInit, 400);
       return;
     }
+    _initialized = true;
     generateBracket('bracket-section-body');
   }
 
+  // Hook para que loadData() en index.html dispare el bracket cuando los datos estén listos
+  window._bracketReady = function() {
+    if (!_initialized) tryInit();
+    else if (typeof refreshBracket === 'function') refreshBracket('bracket-section-body');
+  };
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', tryInit);
+    document.addEventListener('DOMContentLoaded', ()=>setTimeout(tryInit, 500));
   } else {
-    tryInit();
+    setTimeout(tryInit, 500);
   }
 })();
