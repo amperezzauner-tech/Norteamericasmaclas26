@@ -69,6 +69,22 @@ input::placeholder{color:#6a8faa}
 .ppad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
 .pkey{background:#1a3a5c;border:1px solid #1e3a55;border-radius:10px;padding:15px;font-size:1.1rem;font-weight:700;cursor:pointer;transition:background .1s}
 .pkey:hover{background:#2a5070}
+
+
+/* ============================================================
+   V2 PREMIUM — Grupos privados · mismo look de la Polla
+   ============================================================ */
+:root{--bg:#031323;--panel:#08223A;--panel2:#0B2D4D;--line:#2C5D82;--gold:#FFD447;--txt:#F8FAFC;--muted:#9EC7E6;--ok:#22C55E;--bad:#FF5A5F;--blue:#00A6FF}
+body{background:radial-gradient(circle at 10% 0%,rgba(0,166,255,.28),transparent 28%),radial-gradient(circle at 90% 0%,rgba(255,212,71,.18),transparent 24%),linear-gradient(145deg,#031323,#061A2B 48%,#020914)!important;color:var(--txt)!important}
+body:before{content:'';position:fixed;inset:0;pointer-events:none;z-index:-1;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:42px 42px;opacity:.35}
+.hdr{background:linear-gradient(100deg,rgba(3,19,35,.97),rgba(8,34,58,.97),rgba(20,55,88,.94))!important;border-bottom:1px solid rgba(255,212,71,.38)!important;box-shadow:0 10px 30px rgba(0,0,0,.28)}
+.hdr:after{content:'';position:absolute;left:0;right:0;bottom:-2px;height:3px;background:linear-gradient(90deg,#00A6FF,#FFD447,#22C55E,#6A2CC9)}
+.hdr-title{color:var(--gold)!important;font-weight:950;text-shadow:0 0 18px rgba(255,212,71,.22)}.hdr-sub{color:var(--muted)!important}.back-a,.cambiar-btn{background:#061A2B!important;border:1px solid rgba(158,199,230,.28)!important;color:var(--muted)!important;border-radius:999px!important}
+.card,.gcard,.modal{background:linear-gradient(180deg,rgba(11,45,77,.96),rgba(6,26,43,.98))!important;border:1px solid rgba(158,199,230,.22)!important;border-radius:20px!important;box-shadow:0 18px 45px rgba(0,0,0,.34)!important;overflow:hidden}.ch,.gch{background:linear-gradient(90deg,rgba(0,166,255,.16),rgba(255,212,71,.10))!important;border-bottom:1px solid rgba(255,212,71,.20)!important}.ch *,.gsv,.ctag,.badgeg,#pin-title{color:var(--gold)!important}.cb{background:transparent!important}
+input[type=text],input[type=password]{background:#061A2B!important;border-color:rgba(158,199,230,.28)!important;color:#fff!important;border-radius:999px!important}input::placeholder{color:var(--muted)!important}.bg,.chk.on,.pdot.on{background:linear-gradient(135deg,var(--gold),#FFF0A6)!important;color:#06101D!important;border-color:var(--gold)!important}.bgh,.pkey{background:#08223A!important;border-color:rgba(158,199,230,.24)!important;color:var(--muted)!important}.bgr{background:rgba(34,197,94,.18)!important;color:#86EFAC!important}.bred{background:rgba(255,90,95,.16)!important;color:#FFB4B7!important}
+.tnav{background:rgba(3,19,35,.92)!important;border-bottom:1px solid rgba(158,199,230,.18)!important}.tnav button{color:var(--muted)!important}.tnav button.act{color:var(--gold)!important;border-bottom-color:var(--gold)!important}.rtable thead th{background:#08223A!important;color:var(--muted)!important;border-bottom:2px solid var(--gold)!important}.rtable tbody td{border-bottom:1px solid rgba(158,199,230,.14)!important}.merow{background:rgba(0,166,255,.12)!important}.gcard:hover{border-color:rgba(255,212,71,.55)!important;transform:translateY(-1px)}.gsl,.empty,.ibox,#loading-msg,#pin-sub{color:var(--muted)!important}.mrow{border-bottom:1px solid rgba(158,199,230,.14)!important}.ctag{background:#061A2B!important;border:1px solid rgba(255,212,71,.22)}.badgeg{background:rgba(255,212,71,.14)!important;border-color:rgba(255,212,71,.35)!important}.badgeb{background:rgba(0,166,255,.13)!important;color:#9EC7E6!important}.badgegr{background:rgba(34,197,94,.14)!important;color:#86EFAC!important}.chk{border-color:rgba(158,199,230,.38)!important}.ibox{background:#061A2B!important;border-color:rgba(158,199,230,.22)!important}#loading{background:radial-gradient(circle at top,rgba(0,166,255,.18),transparent 30%),#031323!important}.spin{border-color:rgba(158,199,230,.22)!important;border-top-color:var(--gold)!important}#toast{box-shadow:0 18px 40px rgba(0,0,0,.35)}.modal-bg{backdrop-filter:blur(10px)}.pkey:hover{background:#0B2D4D!important;color:#fff!important}
+@media(max-width:720px){.card,.gcard{border-radius:18px!important}.hdr{padding:12px 14px}.tnav button{font-size:.62rem}}
+
 </style>
 </head>
 <body>
