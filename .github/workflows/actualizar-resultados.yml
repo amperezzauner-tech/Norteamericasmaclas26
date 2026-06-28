@@ -1,0 +1,39 @@
+name: Actualizar resultados
+
+on:
+  schedule:
+    - cron: "*/20 16-23 * * *"
+    - cron: "*/20 0-5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Actualizar resultados
+        run: python actualizar_resultados.py
+
+      - name: Guardar cambios
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add resultados.json
+          git diff --cached --quiet || git commit -m "Actualizar resultados automáticamente"
+          git push
